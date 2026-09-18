@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#153f6d">
 <title>Operaciones DDH</title>
-<!-- v1.16 PRUEBA: carga de capturas con OCR local en navegador para Proyección equipos -->
+<!-- v1.17 PRUEBA: carga de capturas con OCR local en navegador para Proyección equipos -->
 <link rel="manifest" href="manifest.webmanifest">
 <style>
 :root{--blue:#153f6d;--blue2:#0e3158;--soft:#eef3f8;--line:#d6e0e9;--ink:#172033;--muted:#657483;--panel:#fff;--yellow:#f2b544}
@@ -552,10 +552,10 @@ function extraerFilasCapturaOCR(tsv,imgW){
  const rows=[];
  for(const b of bands){
    const ws=b.words.sort((a,c)=>a.left-c.left), pct=w=>w.cx/imgW;
-   const pozoTxt=normalizarOCR(ws.filter(w=>pct(w)<.13).map(w=>w.text).join(' '));
-   const sondaTxt=normalizarOCR(ws.filter(w=>pct(w)>=.13&&pct(w)<.25).map(w=>w.text).join(' '));
-   const pendTxt=normalizarOCR(ws.filter(w=>pct(w)>=.56&&pct(w)<.66).map(w=>w.text).join(' '));
-   const fechaTxt=normalizarOCR(ws.filter(w=>pct(w)>=.84&&pct(w)<.95).map(w=>w.text).join(' '));
+   const pozoTxt=normalizarOCR(ws.filter(w=>pct(w)<.14).map(w=>w.text).join(' '));
+   const sondaTxt=normalizarOCR(ws.filter(w=>pct(w)>=.14&&pct(w)<.25).map(w=>w.text).join(' '));
+   const pendTxt=normalizarOCR(ws.filter(w=>pct(w)>=.52&&pct(w)<.58).map(w=>w.text).join(' '));
+   const fechaTxt=normalizarOCR(ws.filter(w=>pct(w)>=.75&&pct(w)<.86).map(w=>w.text).join(' '));
    const pm=pozoTxt.match(/\b(?:DDH|DER|DR|AR|RC)\s*-?\s*\d{2,5}\b/i);
    const em=sondaTxt.replace(/\s+/g,'').match(/\bCH\s*[19]\s*-?\s*\d{2,3}\b/i);
    if(!pm||!em)continue;
@@ -577,12 +577,7 @@ async function leerCapturasProyeccion(){
    const img=await new Promise((res,rej)=>{const im=new Image(),u=URL.createObjectURL(files[k]);im.onload=()=>{URL.revokeObjectURL(u);res(im)};im.onerror=rej;im.src=u});
    const result=await Tesseract.recognize(files[k],"eng",{logger:m=>{if(m.status==="recognizing text"){const local=m.progress||0;bar.style.width=`${Math.round(((k+local)/files.length)*100)}%`;}}},{tsv:true});
    let rows=extraerFilasCapturaOCR(result.data.tsv,img.naturalWidth||img.width);
-   if(!rows.length){
-     // respaldo simple desde texto cuando el TSV no conserva bien columnas
-     const text=String(result.data.text||"");
-     const lines=text.split(/\r?\n/).map(normalizarOCR).filter(Boolean);
-     for(const line of lines){const em=line.match(/\bCH\s*[19][\- ]?\d{2,3}\b/i);const pm=line.match(/\b(?:DDH|DER|DR|AR|RC)[- ]?\d{2,5}\b/i);if(em&&pm){const nums=line.match(/\b\d+(?:[.,]\d+)?\b/g)||[];const dates=line.match(/\d{1,2}-\d{1,2}-\d{4}/g)||[];const n=nums.length?numeroOCR(nums[nums.length-1]):null;if(n!==null)rows.push({equipo:em[0].replace(/\s/g,""),pozo:pm[0].replace(/\s/g,""),metros:n,fecha:dates.length?fechaISOdesdeOCR(dates[dates.length-1]):"",obs:""});}}
-   }
+   // Si no se reconstruyen filas por posición, no se inventan valores desde texto corrido.
    all.push(...rows);
   }
   const uniq=[];const seen=new Set();for(const r of all){const key=r.equipo+'|'+r.pozo;if(!seen.has(key)){seen.add(key);uniq.push(r)}}
@@ -592,7 +587,7 @@ async function leerCapturasProyeccion(){
   for(let i=1;i<=10;i++){["pEquipo","pPozo","pMetros","pFecha","pObs"].forEach(p=>$(p+i).value="")}
   selected.forEach((r,i)=>{$("pEquipo"+(i+1)).value=r.equipo;$("pPozo"+(i+1)).value=r.pozo;$("pMetros"+(i+1)).value=r.metros;$("pFecha"+(i+1)).value=r.fecha||"";});
   bar.style.width="100%";
-  if(selected.length){estado.innerHTML=`<span class="ocr-ok">${selected.length} fila(s) cargada(s), filtradas entre 0 y 70 m y ordenadas de menor a mayor.</span> Revise especialmente metros y fecha antes de generar el PDF. Los cuadros de Coordinación y Cronos no fueron modificados.`;setStatus(`Capturas procesadas: ${selected.length} fila(s) entre 0 y 70 m cargada(s) en Proyección equipos.`)}
+  if(selected.length){const descartadas=uniq.filter(r=>Number(r.metros)>70).length;estado.innerHTML=`<span class="ocr-ok"><b>${selected.length} equipo(s) cargado(s)</b> entre 0 y 70 m.</span> ${descartadas} descartado(s) por superar 70 m. Ordenados de menor a mayor. Revise los datos antes de generar el PDF. Los cuadros de Coordinación y Cronos no fueron modificados.`;setStatus(`Capturas procesadas: ${selected.length} fila(s) entre 0 y 70 m cargada(s) en Proyección equipos.`)}
   else estado.innerHTML='<span class="ocr-warn">No pude reconocer filas con seguridad.</span> Pruebe con una captura más nítida o complete la tabla manualmente.';
  }catch(e){console.error(e);estado.innerHTML='<span class="ocr-warn">No se pudo completar la lectura de la captura.</span> Puede seguir ingresando los datos manualmente.';}
  finally{btn.disabled=false;setTimeout(()=>bar.style.width="0",1800)}
