@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#153f6d">
 <title>Operaciones DDH</title>
-<!-- v1.14 PRUEBA: carga de capturas con OCR local en navegador para Proyección equipos -->
+<!-- v1.16 PRUEBA: carga de capturas con OCR local en navegador para Proyección equipos -->
 <link rel="manifest" href="manifest.webmanifest">
 <style>
 :root{--blue:#153f6d;--blue2:#0e3158;--soft:#eef3f8;--line:#d6e0e9;--ink:#172033;--muted:#657483;--panel:#fff;--yellow:#f2b544}
@@ -541,21 +541,29 @@ function agruparPalabrasOCR(tsv){
 }
 function extraerFilasCapturaOCR(tsv,imgW){
  const words=agruparPalabrasOCR(tsv);if(!words.length)return [];
- const sondas=words.filter(w=>/^(?:CH)?\s*[19][\- ]?\d{2,3}$/i.test(w.text.replace(/I/g,"1"))||/^CH[19][\- ]?\d{2,3}$/i.test(w.text));
+ // Formato objetivo de Cronos: POZO | SONDA | ... | PEND. [m] | ... | FECHA TERMINO.
+ // Agrupa palabras por línea visual para soportar valores que OCR separa (ej. "CH1-" + "154").
+ const sorted=[...words].sort((a,b)=>a.cy-b.cy||a.left-b.left), bands=[];
+ for(const w of sorted){
+   let b=bands.find(x=>Math.abs(x.cy-w.cy)<=Math.max(9,w.height*.8));
+   if(!b){b={cy:w.cy,words:[]};bands.push(b)}
+   b.words.push(w); b.cy=b.words.reduce((z,q)=>z+q.cy,0)/b.words.length;
+ }
  const rows=[];
- for(const sw of sondas){
-   const band=words.filter(w=>Math.abs(w.cy-sw.cy)<=Math.max(16,sw.height*1.25));
-   const pct=w=>w.cx/imgW;
-   const pozoWords=band.filter(w=>pct(w)<.135).sort((a,b)=>a.left-b.left);
-   const pendWords=band.filter(w=>pct(w)>=.60&&pct(w)<.675).sort((a,b)=>a.left-b.left);
-   const fechaWords=band.filter(w=>pct(w)>=.89).sort((a,b)=>a.left-b.left);
-   let pozo=normalizarOCR(pozoWords.map(w=>w.text).join(" ")).split(" ")[0]||"";
-   pozo=pozo.replace(/[^A-Z0-9-]/gi,"");
-   let equipo=sw.text.replace(/\s/g,"").replace(/^CH(?=[19])/i,"CH").replace(/^([19])(?=[- ]?\d)/,"CH$1").replace(/CH([19])(?=\d)/i,"CH$1-");
-   equipo=equipo.toUpperCase().replace(/I/g,"1");
-   const pend=numeroOCR(pendWords.map(w=>w.text).join(" "));
-   const fecha=fechaISOdesdeOCR(fechaWords.map(w=>w.text).join(" "));
-   if(pozo&&equipo&&pend!==null)rows.push({equipo,pozo,metros:Math.max(0,pend),fecha,obs:""});
+ for(const b of bands){
+   const ws=b.words.sort((a,c)=>a.left-c.left), pct=w=>w.cx/imgW;
+   const pozoTxt=normalizarOCR(ws.filter(w=>pct(w)<.13).map(w=>w.text).join(' '));
+   const sondaTxt=normalizarOCR(ws.filter(w=>pct(w)>=.13&&pct(w)<.25).map(w=>w.text).join(' '));
+   const pendTxt=normalizarOCR(ws.filter(w=>pct(w)>=.56&&pct(w)<.66).map(w=>w.text).join(' '));
+   const fechaTxt=normalizarOCR(ws.filter(w=>pct(w)>=.84&&pct(w)<.95).map(w=>w.text).join(' '));
+   const pm=pozoTxt.match(/\b(?:DDH|DER|DR|AR|RC)\s*-?\s*\d{2,5}\b/i);
+   const em=sondaTxt.replace(/\s+/g,'').match(/\bCH\s*[19]\s*-?\s*\d{2,3}\b/i);
+   if(!pm||!em)continue;
+   const pend=numeroOCR(pendTxt); if(pend===null)continue;
+   const pozo=pm[0].replace(/\s+/g,'').toUpperCase();
+   let equipo=em[0].replace(/\s+/g,'').toUpperCase();
+   equipo=equipo.replace(/^CH([19])(\d)/,'CH$1-$2');
+   rows.push({equipo,pozo,metros:Math.max(0,pend),fecha:fechaISOdesdeOCR(fechaTxt),obs:''});
  }
  const seen=new Set();return rows.filter(r=>{const k=r.equipo+'|'+r.pozo;if(seen.has(k))return false;seen.add(k);return true;});
 }
@@ -567,7 +575,7 @@ async function leerCapturasProyeccion(){
   for(let k=0;k<files.length;k++){
    estado.innerHTML=`Leyendo captura ${k+1} de ${files.length}… <b>puede tardar unos segundos</b>.`;
    const img=await new Promise((res,rej)=>{const im=new Image(),u=URL.createObjectURL(files[k]);im.onload=()=>{URL.revokeObjectURL(u);res(im)};im.onerror=rej;im.src=u});
-   const result=await Tesseract.recognize(files[k],"eng",{logger:m=>{if(m.status==="recognizing text"){const local=m.progress||0;bar.style.width=`${Math.round(((k+local)/files.length)*100)}%`;}}});
+   const result=await Tesseract.recognize(files[k],"eng",{logger:m=>{if(m.status==="recognizing text"){const local=m.progress||0;bar.style.width=`${Math.round(((k+local)/files.length)*100)}%`;}}},{tsv:true});
    let rows=extraerFilasCapturaOCR(result.data.tsv,img.naturalWidth||img.width);
    if(!rows.length){
      // respaldo simple desde texto cuando el TSV no conserva bien columnas
