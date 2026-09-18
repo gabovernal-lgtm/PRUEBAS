@@ -578,12 +578,13 @@ async function leerCapturasProyeccion(){
    all.push(...rows);
   }
   const uniq=[];const seen=new Set();for(const r of all){const key=r.equipo+'|'+r.pozo;if(!seen.has(key)){seen.add(key);uniq.push(r)}}
-  // Prioriza pozos pendientes; si vienen terminados con PEND=0 también los conserva, hasta 10.
-  const selected=uniq.slice(0,10);
+  // Filtro operativo: incluir únicamente PEND. [m] entre 0 y 70, ambos inclusive.
+  // Los PEND=0 se conservan aunque la fila figure como Terminada. Luego ordena de menor a mayor.
+  const selected=uniq.filter(r=>Number.isFinite(Number(r.metros))&&Number(r.metros)>=0&&Number(r.metros)<=70).sort((a,b)=>Number(a.metros)-Number(b.metros)).slice(0,10);
   for(let i=1;i<=10;i++){["pEquipo","pPozo","pMetros","pFecha","pObs"].forEach(p=>$(p+i).value="")}
   selected.forEach((r,i)=>{$("pEquipo"+(i+1)).value=r.equipo;$("pPozo"+(i+1)).value=r.pozo;$("pMetros"+(i+1)).value=r.metros;$("pFecha"+(i+1)).value=r.fecha||"";});
   bar.style.width="100%";
-  if(selected.length){estado.innerHTML=`<span class="ocr-ok">${selected.length} fila(s) cargada(s).</span> Revise especialmente metros y fecha antes de generar el PDF. Los cuadros de Coordinación y Cronos no fueron modificados.`;setStatus(`Capturas procesadas: ${selected.length} fila(s) cargada(s) en Proyección equipos.`)}
+  if(selected.length){estado.innerHTML=`<span class="ocr-ok">${selected.length} fila(s) cargada(s), filtradas entre 0 y 70 m y ordenadas de menor a mayor.</span> Revise especialmente metros y fecha antes de generar el PDF. Los cuadros de Coordinación y Cronos no fueron modificados.`;setStatus(`Capturas procesadas: ${selected.length} fila(s) entre 0 y 70 m cargada(s) en Proyección equipos.`)}
   else estado.innerHTML='<span class="ocr-warn">No pude reconocer filas con seguridad.</span> Pruebe con una captura más nítida o complete la tabla manualmente.';
  }catch(e){console.error(e);estado.innerHTML='<span class="ocr-warn">No se pudo completar la lectura de la captura.</span> Puede seguir ingresando los datos manualmente.';}
  finally{btn.disabled=false;setTimeout(()=>bar.style.width="0",1800)}
