@@ -80,6 +80,7 @@ body{background:linear-gradient(180deg,#e8f2fc 0,#f6f9fd 380px,#f1f6fb 100%)}
 <button id="nav-reparacion" onclick="showView('reparacion')">Reparación / mantención camioneta</button>
 <button id="nav-flota" onclick="showView('flota')">Equipos Flota / Sondas</button>
 <button id="nav-proyeccion" onclick="showView('proyeccion')">Proyección equipos</button>
+<button id="nav-coronas" onclick="showView('coronas')">Rebaja de Coronas</button>
 <button id="nav-historial" onclick="showView('historial')">Historial</button>
 <button id="nav-config" onclick="showView('config')">Configuración de correo</button>
 </nav>
@@ -97,6 +98,7 @@ body{background:linear-gradient(180deg,#e8f2fc 0,#f6f9fd 380px,#f1f6fb 100%)}
 <button class="home-card" onclick="showView('reparacion')"><span class="ico">▣</span><strong>Reparación / Mantención camioneta</strong><span>Solicitud, kilometraje y respaldo fotográfico.</span></button>
 <button class="home-card" onclick="showView('flota')"><span class="ico">⚙</span><strong>Equipos Flota / Sondas</strong><span>Reparación y mantención de equipos.</span></button>
 <button class="home-card" onclick="showView('proyeccion')"><span class="ico">↗</span><strong>Proyección equipos</strong><span>Metros por perforar, término proyectado y coordinación.</span></button>
+<button class="home-card" onclick="showView('coronas')"><span class="ico">◈</span><strong>Rebaja de Coronas</strong><span>Guardar registro y preparar correo sin PDF.</span></button>
 <button class="home-card" onclick="showView('historial')"><span class="ico">◷</span><strong>Historial</strong><span>Consulta de registros online.</span></button>
 <button class="home-card" onclick="showView('config')"><span class="ico">✉</span><strong>Configuración de correo</strong><span>Destinatarios y copias de los módulos.</span></button>
 </div>
@@ -258,6 +260,23 @@ body{background:linear-gradient(180deg,#e8f2fc 0,#f6f9fd 380px,#f1f6fb 100%)}
 </div>
 </section>
 
+<section id="view-coronas" class="hidden"><div class="panel">
+<div class="module-head"><h2>Rebaja de Coronas</h2><button class="btn btn-white" onclick="showView('home')">← Volver al menú</button></div>
+<div class="grid">
+<label>Equipo:</label><select id="coEquipo"><option value="">Seleccione equipo</option></select>
+<label>Pozo:</label><input id="coPozo" placeholder="Pozo">
+<label>Serie corona:</label><input id="coSerie" placeholder="Serie de corona">
+<label>ID corona:</label><input id="coId" placeholder="ID de corona">
+<label>Fondo inicial (m):</label><input id="coInicial" type="number" min="0" step="any" inputmode="decimal">
+<label>Fondo final (m):</label><input id="coFinal" type="number" min="0" step="any" inputmode="decimal">
+<label>Tipo desgaste:</label><textarea id="coDesgaste" rows="3" placeholder="Describa el tipo de desgaste"></textarea>
+<label>Vida útil:</label><select id="coVida"><option value="">Seleccione</option><option>Con vida útil</option><option>Sin vida útil</option></select>
+</div><div class="actions"><button class="btn btn-blue" id="coGuardar" onclick="guardarCoronaYCorreo()">Guardar registro y abrir correo</button><button class="btn btn-light" onclick="cargarCoronas()">Actualizar historial de coronas</button></div>
+<div id="coEstado" class="note" role="status"></div>
+<h3 class="section-title">Historial de Rebajas de Coronas (independiente)</h3>
+<div class="grid"><label>Equipo:</label><select id="coFiltroEquipo" onchange="renderCoronas()"><option value="">Todos los equipos</option></select><label>Desde:</label><input id="coDesde" type="date" onchange="renderCoronas()"><label>Hasta:</label><input id="coHasta" type="date" onchange="renderCoronas()"></div>
+<div class="history-wrap"><div id="coTabla"></div></div>
+</div></section>
 <section id="view-historial" class="hidden">
 <div class="panel">
 <div class="module-head"><h2>Historial de operaciones</h2><button class="btn btn-white" onclick="showView('home')">← Volver al menú</button></div>
@@ -293,6 +312,8 @@ body{background:linear-gradient(180deg,#e8f2fc 0,#f6f9fd 380px,#f1f6fb 100%)}
 <label>Para reparación:</label><input id="cParaReparacion" placeholder="Destinatario de reparación">
 <label>CC reparación:</label><input id="cCCReparacion" placeholder="Opcional">
 </div>
+<h3 class="section-title">Rebaja de Coronas</h3>
+<div class="grid"><label>Para coronas:</label><input id="cParaCoronas" placeholder="Destinatarios rebaja de coronas"><label>CC coronas:</label><input id="cCCCoronas" placeholder="Opcional"></div>
 <h3 class="section-title">Equipos Flota / Sondas</h3>
 <div class="grid">
 <label>Para flota / sondas:</label><input id="cParaFlota" placeholder="Destinatario Equipos Flota / Sondas">
@@ -336,10 +357,11 @@ function fechaHoy(){return fechaCorta(hoyISO())}
 const EQUIPOS_CRONOS=["CH1-83", "CH1-133", "CH1-135", "CH1-140", "CH1-141", "CH1-142", "CH1-143", "CH1-154", "CH1-155", "CH1-156", "CH1-159", "CH1-160", "CH1-161", "CH1-162", "CH9-63", "CH1-120", "CH1-144", "CH1-158", "CH1-146"];
 
 function showView(v){
-const views=["home","traslado","srm","devolucion","minuta","reparacion","flota","proyeccion","historial","config"];
+const views=["home","traslado","srm","devolucion","minuta","reparacion","flota","proyeccion","coronas","historial","config"];
 views.forEach(x=>$("view-"+x)?.classList.toggle("hidden",x!==v));
-["traslado","srm","devolucion","minuta","reparacion","flota","proyeccion","historial","config"].forEach(x=>$("nav-"+x)?.classList.toggle("active",x===v));
+["traslado","srm","devolucion","minuta","reparacion","flota","proyeccion","coronas","historial","config"].forEach(x=>$("nav-"+x)?.classList.toggle("active",x===v));
 if(v==="historial")cargarHistorial();
+if(v==="coronas")cargarCoronas();
 window.scrollTo({top:0,behavior:"smooth"});
 }
 function init(){
@@ -354,6 +376,10 @@ $("cParaMinuta").value=localStorage.getItem("ddh_para_minuta")||"";
 $("cCCMinuta").value=localStorage.getItem("ddh_cc_minuta")||"";
 $("cParaReparacion").value=localStorage.getItem("ddh_para_reparacion")||"";
 $("cCCReparacion").value=localStorage.getItem("ddh_cc_reparacion")||"";
+$("cParaCoronas").value=localStorage.getItem("ddh_para_coronas")||"";
+$("cCCCoronas").value=localStorage.getItem("ddh_cc_coronas")||"";
+$("coEquipo").innerHTML+=EQUIPOS_CRONOS.map(e=>`<option value="${esc(e)}">${esc(e)}</option>`).join("")+`<option value="OTRO">Otro equipo</option>`;
+$("coFiltroEquipo").innerHTML+=EQUIPOS_CRONOS.map(e=>`<option value="${esc(e)}">${esc(e)}</option>`).join("");
 $("cParaFlota").value=localStorage.getItem("ddh_para_flota")||"";
 $("cCCFlota").value=localStorage.getItem("ddh_cc_flota")||"";
 $("devRows").innerHTML=preguntas.map((q,i)=>`<tr><td class="n">${i+1}</td><td>${esc(q)}</td><td><select class="table-input" id="dCumple${i+1}"><option></option><option${i<5?" selected":""}>Sí</option><option>No</option><option${i===5?" selected":""}>N/A</option></select></td><td><input class="table-input" id="dObs${i+1}"></td></tr>`).join("");
@@ -364,7 +390,7 @@ $("rFotos").addEventListener("change",function(){if(this.files.length>6){alert("
 $("fFotos").addEventListener("change",function(){if(this.files.length>6){alert("Puede seleccionar un máximo de 6 fotografías.");this.value="";}});
 if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(()=>{});
 }
-function guardarConfig(){localStorage.setItem("ddh_para",val("cPara"));localStorage.setItem("ddh_cc",val("cCC"));localStorage.setItem("ddh_para_minuta",val("cParaMinuta"));localStorage.setItem("ddh_cc_minuta",val("cCCMinuta"));localStorage.setItem("ddh_para_reparacion",val("cParaReparacion"));localStorage.setItem("ddh_cc_reparacion",val("cCCReparacion"));localStorage.setItem("ddh_para_flota",val("cParaFlota"));localStorage.setItem("ddh_cc_flota",val("cCCFlota"));setStatus("Configuración de correo guardada en este navegador.")}
+function guardarConfig(){localStorage.setItem("ddh_para_coronas",val("cParaCoronas"));localStorage.setItem("ddh_cc_coronas",val("cCCCoronas"));localStorage.setItem("ddh_para",val("cPara"));localStorage.setItem("ddh_cc",val("cCC"));localStorage.setItem("ddh_para_minuta",val("cParaMinuta"));localStorage.setItem("ddh_cc_minuta",val("cCCMinuta"));localStorage.setItem("ddh_para_reparacion",val("cParaReparacion"));localStorage.setItem("ddh_cc_reparacion",val("cCCReparacion"));localStorage.setItem("ddh_para_flota",val("cParaFlota"));localStorage.setItem("ddh_cc_flota",val("cCCFlota"));setStatus("Configuración de correo guardada en este navegador.")}
 function mailto(subject,body){
 const para=val("cPara");const cc=val("cCC");
 const url=`mailto:${encodeURIComponent(para)}?cc=${encodeURIComponent(cc)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -402,18 +428,9 @@ function datosCompletosHistorial(tipo){
 async function guardarOnline(reg){
 try{
 reg.datos=datosCompletosHistorial(reg.tipo);
-// La cuenta se toma de la sesión autenticada, nunca de un campo editable.
-const cuentaRegistro=String(authSession?.user?.email||"").trim().toLowerCase();
-if(!cuentaRegistro)throw new Error("No se pudo identificar la cuenta que realiza el registro.");
-const q="?select=id,datos&identificador=eq."+encodeURIComponent(reg.identificador)+"&limit=1";
+const q="?select=id&identificador=eq."+encodeURIComponent(reg.identificador)+"&limit=1";
 const existe=await api(q);
-if(existe.length){
- // Una actualización no cambia la autoría de un registro anterior.
- const anterior=existe[0].datos&&typeof existe[0].datos==="object"?existe[0].datos:{};
- if(anterior.cuenta_registro)reg.datos.cuenta_registro=anterior.cuenta_registro;
- await api("?id=eq."+encodeURIComponent(existe[0].id),{method:"PATCH",headers:{"Prefer":"return=minimal"},body:JSON.stringify({datos:reg.datos})});return true;
-}
-reg.datos.cuenta_registro=cuentaRegistro;
+if(existe.length){await api("?id=eq."+encodeURIComponent(existe[0].id),{method:"PATCH",headers:{"Prefer":"return=minimal"},body:JSON.stringify({datos:reg.datos})});return true;}
 await api("",{method:"POST",headers:{"Prefer":"return=minimal"},body:JSON.stringify(reg)});
 return true;
 }catch(e){console.error(e);setStatus("El correo se preparó, pero no fue posible guardar el historial online.");return false}
@@ -619,7 +636,7 @@ function renderHistorial(){
  const rows=historialFiltrado();
  $("historialEstado").textContent=`${rows.length} registro(s) según filtros · ${historialCache.length} cargado(s). Fechas según creación del registro.`;
  if(!rows.length){$("historialTabla").innerHTML='<div class="note" style="padding:20px;text-align:center">No hay registros para mostrar.</div>';return}
- $("historialTabla").innerHTML=`<table class="history-table"><thead><tr><th>Fecha de registro</th><th>Cuenta de registro</th><th>Fecha solicitud</th><th>Tipo</th><th>Pozo</th><th>Equipo</th><th>Sector / Origen → Destino</th><th>Supervisor</th><th>Jefe de faena</th><th>Detalle</th></tr></thead><tbody>${rows.map(o=>{const sec=(o.sector_origen||o.sector_destino)?`${o.sector_origen||""} → ${o.sector_destino||""}`:(o.sector||"");const fechaReg=o.created_at?new Date(o.created_at).toLocaleString('es-CL'):'';return `<tr><td>${esc(fechaReg)}</td><td>${esc(o.datos?.cuenta_registro||"No registrado")}</td><td>${esc(o.fecha)}</td><td><span class="pill">${esc(o.tipo)}</span></td><td>${esc(o.pozo)}</td><td>${esc(o.equipo)}</td><td>${esc(sec)}</td><td>${esc(o.supervisor)}</td><td>${esc(o.jefe_faena)}</td><td>${esc(o.detalle)}</td></tr>`}).join("")}</tbody></table>`;
+ $("historialTabla").innerHTML=`<table class="history-table"><thead><tr><th>Fecha de registro</th><th>Fecha solicitud</th><th>Tipo</th><th>Pozo</th><th>Equipo</th><th>Sector / Origen → Destino</th><th>Supervisor</th><th>Jefe de faena</th><th>Detalle</th></tr></thead><tbody>${rows.map(o=>{const sec=(o.sector_origen||o.sector_destino)?`${o.sector_origen||""} → ${o.sector_destino||""}`:(o.sector||"");const fechaReg=o.created_at?new Date(o.created_at).toLocaleString('es-CL'):'';return `<tr><td>${esc(fechaReg)}</td><td>${esc(o.fecha)}</td><td><span class="pill">${esc(o.tipo)}</span></td><td>${esc(o.pozo)}</td><td>${esc(o.equipo)}</td><td>${esc(sec)}</td><td>${esc(o.supervisor)}</td><td>${esc(o.jefe_faena)}</td><td>${esc(o.detalle)}</td></tr>`}).join("")}</tbody></table>`;
 }
 
 function seleccionOtro(sel){
@@ -650,7 +667,7 @@ function exportarHistorialPDF(){
   "REPARACIÓN / MANTENCIÓN CAMIONETA":[["Fecha registro",r=>fecha(r.created_at)],["Fecha solicitud",r=>texto(r.fecha)],["Camioneta / N° interno",r=>texto(r.equipo)],["Supervisor",r=>texto(r.supervisor)],["Detalle",r=>texto(r.detalle)]],
   "EQUIPOS FLOTA / SONDAS":[["Fecha registro",r=>fecha(r.created_at)],["Fecha solicitud",r=>texto(r.fecha)],["Equipo",r=>texto(r.equipo)],["Supervisor",r=>texto(r.supervisor)],["Detalle",r=>texto(r.detalle)]]
  };
- const cols=[...[ ["Cuenta de registro",r=>texto(r.datos?.cuenta_registro)||"No registrado"] ],...(campos[tipo]||campos["TRASLADO"])];
+ const cols=campos[tipo]||campos["TRASLADO"];
  const header=()=>{
   doc.setFillColor(18,60,105);doc.rect(0,0,297,22,"F");
   doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(15);doc.text("OPERACIONES DDH  |  "+nombre,12,14);
@@ -1054,6 +1071,51 @@ if(fotoFiles.length){
 }
 doc.save(`DEVOLUCION_PLATAFORMA_${d.pozo.replace(/[\\/:*?"<>|]/g,"_")}_${d.equipo.replace(/[\\/:*?"<>|]/g,"_")}.pdf`);
 setStatus(fotoFiles.length?`PDF de devolución generado con ${fotoFiles.length} fotografía(s) integrada(s).`:"PDF de devolución generado.");
+}
+
+
+// Rebaja de Coronas: tabla y permisos independientes del historial general.
+const CORONAS_API=AUTH_PROJECT_URL+"/rest/v1/rebajas_coronas";
+let coronasCache=[];
+async function coronasRequest(path="",opts={}){
+ const r=await fetch(CORONAS_API+path,{...opts,headers:{"Authorization":"Bearer "+await validToken(),"apikey":AUTH_PUBLIC_KEY,"Content-Type":"application/json","Accept":"application/json",...(opts.headers||{})}});
+ if(!r.ok)throw new Error(`Supabase ${r.status}: ${await r.text()}`);
+ return r.status===204||r.status===201&&opts.headers?.Prefer==="return=minimal"?null:await r.json();
+}
+function coronaEquipo(){const v=val("coEquipo");return v==="OTRO"?prompt("Ingrese el nombre del equipo:")?.trim()||"":v}
+async function guardarCoronaYCorreo(){
+ const btn=$("coGuardar");if(btn.disabled)return;
+ const equipo=coronaEquipo(),pozo=val("coPozo"),serie=val("coSerie"),id=val("coId"),desgaste=val("coDesgaste"),vida=val("coVida");
+ const iniTexto=val("coInicial"),finTexto=val("coFinal"),ini=Number(iniTexto),fin=Number(finTexto);
+ const para=val("cParaCoronas"),cc=val("cCCCoronas");
+ if(!equipo||!pozo||!serie||!id||!desgaste||!vida||iniTexto===""||finTexto===""){alert("Complete todos los datos de la rebaja.");return}
+ if(!Number.isFinite(ini)||!Number.isFinite(fin)||ini<0||fin<ini){alert("Revise los fondos: el final debe ser mayor o igual al inicial.");return}
+ if(!para){alert("Configure primero los destinatarios de Rebaja de Coronas en Configuración de correo.");showView("config");$("cParaCoronas").focus();return}
+ const correo=authSession?.user?.email||authProfile?.email;
+ if(!correo){alert("No se pudo identificar la cuenta. Ingrese nuevamente.");return}
+ btn.disabled=true;$("coEstado").textContent="Guardando rebaja en Supabase…";
+ try{
+  await coronasRequest("",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({equipo,pozo,serie_corona:serie,id_corona:id,fondo_inicial:ini,fondo_final:fin,tipo_desgaste:desgaste,vida_util:vida,cuenta_usuario:correo})});
+  $("coEstado").textContent="Rebaja guardada. Abriendo correo para revisar (el registro queda guardado aunque no envíe el correo).";
+  await cargarCoronas();
+  const asunto=`REBAJA DE CORONA – Equipo ${equipo} – Pozo ${pozo}`;
+  const cuerpo=`Estimados:\n\nSe informa rebaja de corona con los siguientes antecedentes:\n\nEquipo: ${equipo}\nPozo: ${pozo}\nSerie corona: ${serie}\nID corona: ${id}\nFondo inicial: ${ini} m\nFondo final: ${fin} m\nMetros perforados: ${(fin-ini).toFixed(2)} m\nTipo desgaste: ${desgaste}\nVida útil: ${vida}\n\nRegistrado por: ${correo}\n\nSaludos cordiales.`;
+  window.location.href=`mailto:${para.split(/[;,\s]+/).filter(Boolean).map(encodeURIComponent).join(",")}?cc=${encodeURIComponent(cc)}&subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
+ }catch(e){console.error(e);$("coEstado").textContent="No se pudo guardar la rebaja: "+e.message+". No se abrió el correo.";alert("No se guardó la rebaja en Supabase. Revise el mensaje y la tabla de PRUEBAS.")}
+ finally{btn.disabled=false}
+}
+async function cargarCoronas(){
+ $("coEstado").textContent="Cargando historial de coronas…";
+ try{coronasCache=await coronasRequest("?select=*&order=created_at.desc&limit=1000");renderCoronas();$("coEstado").textContent=`${coronasCache.length} rebaja(s) cargada(s).`}
+ catch(e){console.error(e);$("coEstado").textContent="No se pudo consultar rebajas: "+e.message;$("coTabla").textContent=""}
+}
+function renderCoronas(){
+ const eq=val("coFiltroEquipo"),desde=val("coDesde"),hasta=val("coHasta");
+ const rows=coronasCache.filter(r=>(!eq||r.equipo===eq)&&(!desde||r.created_at?.slice(0,10)>=desde)&&(!hasta||r.created_at?.slice(0,10)<=hasta));
+ if(!rows.length){$("coTabla").textContent="No hay rebajas para estos filtros.";return}
+ const cols=["Fecha","Equipo","Pozo","Serie corona","ID corona","Fondo inicial","Fondo final","Metros","Tipo desgaste","Vida útil","Cuenta"];
+ const vals=r=>[new Date(r.created_at).toLocaleString("es-CL"),r.equipo,r.pozo,r.serie_corona,r.id_corona,r.fondo_inicial,r.fondo_final,(Number(r.fondo_final)-Number(r.fondo_inicial)).toFixed(2),r.tipo_desgaste,r.vida_util,r.cuenta_usuario];
+ $("coTabla").innerHTML=`<table class="history-table"><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr>${vals(r).map(v=>`<td>${esc(v)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
 }
 
 // ACCESO: la autorización real se aplica en Supabase mediante RLS y RPC.
