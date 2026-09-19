@@ -73,6 +73,27 @@ body{background:#fff}
 @media(max-width:900px){.brand-bar{grid-template-columns:1fr 1fr;gap:8px}.brand-center{grid-column:1/-1;grid-row:2}.header-shortcuts{grid-column:1/-1;grid-row:3;justify-content:center}.home-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.brand-bar{padding:12px 10px}.brand-logo img{max-height:55px}.header-shortcuts button{flex:1;max-width:170px}.home-card{min-height:132px;padding:12px 8px}.home-card strong{font-size:13px}.home-card .ico{margin-bottom:8px}.container{margin-top:12px}}
 @media print{.header-shortcuts{display:none!important}}
+
+/* DISEÑO APROBADO: únicamente portada y accesos, blanco/azul/amarillo. */
+body{background:linear-gradient(#fff,#f6faff)!important}
+.header{border-top:0!important;border-bottom:4px solid #123c69!important;box-shadow:0 2px 14px #123c6910!important}
+.brand-bar{max-width:1450px!important;grid-template-columns:minmax(145px,1fr) minmax(180px,1.2fr) minmax(145px,1fr) auto!important;gap:20px!important;padding:15px 24px!important}
+.brand-logo img{max-height:85px!important}.brand-center h1{font-size:clamp(20px,2.3vw,34px)!important}
+.header-shortcuts{gap:12px!important}.header-shortcuts button{font-size:15px!important;font-weight:700!important;padding:15px 17px!important;border-radius:13px!important;color:#123c69!important;white-space:normal!important;line-height:1.2!important;min-height:57px!important}
+.header-shortcuts button:last-child{background:#ffdb47!important;border-color:#f6c522!important;max-width:205px}
+.container{max-width:1450px!important}.home-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:14px!important}
+.home-card{background:#fff!important;border:1px solid #d7e4f3!important;border-radius:13px!important;border-top:1px solid #d7e4f3!important;min-height:175px!important;padding:18px 12px!important;text-align:center!important;box-shadow:0 3px 12px #123c690b!important}
+.home-card:hover{transform:translateY(-2px);border-color:#ffcb2e!important;box-shadow:0 8px 22px #123c691a!important}
+.home-card .ico{display:flex!important;width:68px!important;height:68px!important;margin:0 auto 12px!important;align-items:center!important;justify-content:center!important;background:#edf5ff!important;color:#17477f!important;border-radius:19px!important;font-size:unset!important}
+.home-card .ico svg{display:block;width:43px;height:43px}
+.home-card strong{font-size:16px!important;color:#10365f!important}.home-card span:not(.ico){font-size:13px!important}
+.home-card:after{content:'';display:block;width:40px;height:4px;background:#ffcb2e;border-radius:4px;margin:11px auto 0}
+.home-card[onclick="showView('coronas')"]{background:#fff!important;border-color:#d7e4f3!important}.home-card[onclick="showView('coronas')"] .ico{background:#edf5ff!important;color:#17477f!important}
+#view-home>.panel{position:relative;overflow:hidden}
+#view-home>.panel:after{content:'';display:block;height:80px;margin:18px -18px -18px;background:linear-gradient(160deg,transparent 48%,#c8ddf5 49% 60%,transparent 61%) 0 15px/190px 80px repeat-x,linear-gradient(165deg,transparent 40%,#8bb3e2 41% 70%,transparent 71%) 0 24px/260px 90px repeat-x,linear-gradient(170deg,transparent 44%,#346fae 45%) 0 35px/330px 90px repeat-x;opacity:.68;pointer-events:none}
+@media(max-width:1100px){.brand-bar{grid-template-columns:1fr 1.2fr 1fr!important}.header-shortcuts{grid-column:1/-1;justify-content:center}.home-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:760px){.brand-bar{grid-template-columns:1fr 1fr!important;padding:12px!important;gap:10px!important}.brand-center{grid-column:1/-1;grid-row:2}.header-shortcuts{grid-column:1/-1;grid-row:3;display:grid!important;grid-template-columns:1fr 1fr;width:100%}.header-shortcuts button{max-width:none!important;font-size:12px!important;padding:11px 8px!important;min-height:50px!important}.brand-logo img{max-height:54px!important}.home-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}.home-card{min-height:153px!important;padding:12px 7px!important}.home-card .ico{width:54px!important;height:54px!important;margin-bottom:8px!important}.home-card .ico svg{width:35px;height:35px}.home-card strong{font-size:13px!important}.home-card span:not(.ico){font-size:11px!important}}
+@media print{#view-home>.panel:after{display:none!important}}
 </style>
 <script src="./config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
@@ -88,7 +109,7 @@ body{background:#fff}
 <div id="appShell" hidden>
 <div id="authTopbar" style="background:#092b50;color:white;padding:8px 18px;display:flex;gap:12px;justify-content:flex-end;align-items:center;flex-wrap:wrap"><span id="sessionEmail"></span><button class="btn btn-white" id="adminToggle" hidden>Administrar usuarios</button><button class="btn btn-white" id="logoutBtn">Cerrar sesión</button></div>
 <section id="adminPanel" hidden><h2>Administración de usuarios</h2><p>Aprueba o desactiva las cuentas registradas. La aprobación no sustituye la verificación del correo.</p><div id="adminMessage" role="status"></div><div style="overflow-x:auto"><table><thead><tr><th>Correo</th><th>Estado</th><th>Acción</th></tr></thead><tbody id="adminRows"></tbody></table></div></section>
-<header class="header"><div class="brand-bar"><div class="brand-logo"><img id="appLogoGeotec" alt="Geotec S.A."></div><div class="brand-center"><h1>OPERACIONES DDH</h1><p>PLANIFICACIÓN · CONTROL · RESULTADOS</p></div><div class="brand-logo"><img id="appLogoCollahuasi" alt="Collahuasi"></div><div class="header-shortcuts"><button type="button" onclick="showView('historial')" aria-label="Abrir historial">◷ <span>Historial</span></button><button type="button" onclick="showView('config')" aria-label="Configurar correos">✉ <span>Correos</span></button></div></div><div class="brand-accent"></div></header>
+<header class="header"><div class="brand-bar"><div class="brand-logo"><img id="appLogoGeotec" alt="Geotec S.A."></div><div class="brand-center"><h1>OPERACIONES DDH</h1><p>PLANIFICACIÓN · CONTROL · RESULTADOS</p></div><div class="brand-logo"><img id="appLogoCollahuasi" alt="Collahuasi"></div><div class="header-shortcuts"><button type="button" onclick="showView('historial')" aria-label="Abrir historial">◷ <span>Historial</span></button><button type="button" onclick="showView('config')" aria-label="Configurar correos">⚙ <span>Configuración de correo</span></button></div></div><div class="brand-accent"></div></header>
 <nav class="nav hidden" aria-hidden="true">
 <button id="nav-traslado" onclick="showView('traslado')">Nuevo traslado</button>
 <button id="nav-srm" onclick="showView('srm')">Nuevo SRM</button>
@@ -108,14 +129,14 @@ body{background:#fff}
 <h2>Menú principal</h2>
 <div class="note" style="margin-bottom:16px">Seleccione una función para comenzar.</div>
 <div class="home-grid">
-<button class="home-card" onclick="showView('traslado')"><span class="ico">↔</span><strong>Traslado de equipo</strong><span>Solicitud, controles, PDF y correo.</span></button>
-<button class="home-card" onclick="showView('srm')"><span class="ico">◉</span><strong>Tricono SRM</strong><span>Preparación de correo SRM.</span></button>
-<button class="home-card" onclick="showView('devolucion')"><span class="ico">✓</span><strong>Devolución de plataforma</strong><span>Verificación, fotografías, PDF y correo.</span></button>
-<button class="home-card" onclick="showView('minuta')"><span class="ico">▤</span><strong>Minuta reuniones</strong><span>Acuerdos, responsables y fechas.</span></button>
-<button class="home-card" onclick="showView('reparacion')"><span class="ico">▣</span><strong>Reparación / Mantención camioneta</strong><span>Solicitud, kilometraje y respaldo fotográfico.</span></button>
-<button class="home-card" onclick="showView('flota')"><span class="ico">⚙</span><strong>Equipos Flota / Sondas</strong><span>Reparación y mantención de equipos.</span></button>
-<button class="home-card" onclick="showView('proyeccion')"><span class="ico">↗</span><strong>Proyección equipos</strong><span>Metros por perforar, término proyectado y coordinación.</span></button>
-<button class="home-card" onclick="showView('coronas')"><span class="ico">◈</span><strong>Rebaje de Coronas</strong><span>Guardar registro y preparar correo sin PDF.</span></button>
+<button class="home-card" onclick="showView('traslado')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v10H3z M14 10h4l3 3v4h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg></span><strong>Traslado de equipo</strong><span>Solicitud, controles, PDF y correo.</span></button>
+<button class="home-card" onclick="showView('srm')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3l-3 4 3 4-3 4 7 6 7-6-3-4 3-4-3-4-4 3-4-3z"/><circle cx="12" cy="12" r="3"/><path d="M8 7l8 10M16 7L8 17"/></svg></span><strong>Tricono SRM</strong><span>Preparación de correo SRM.</span></button>
+<button class="home-card" onclick="showView('devolucion')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21l4-18 4 18M6 21h12M9 8h6M8 13h8M7 18h10M12 3v18"/></svg></span><strong>Devolución de plataforma</strong><span>Verificación, fotografías, PDF y correo.</span></button>
+<button class="home-card" onclick="showView('minuta')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="3"/><circle cx="4.5" cy="9" r="2"/><circle cx="19.5" cy="9" r="2"/><path d="M6 20v-3a6 6 0 0112 0v3zM1 19v-3a4 4 0 014-4M23 19v-3a4 4 0 00-4-4"/></svg></span><strong>Minuta reuniones</strong><span>Acuerdos, responsables y fechas.</span></button>
+<button class="home-card" onclick="showView('reparacion')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h13l4 4v6H3zM16 8v4h4"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg></span><strong>Reparación / Mantención camioneta</strong><span>Solicitud, kilometraje y respaldo fotográfico.</span></button>
+<button class="home-card" onclick="showView('flota')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3a6 6 0 00-7 8L2 16l6 6 5-5a6 6 0 008-7l-4 4-5-5 4-4z"/></svg></span><strong>Equipos Flota / Sondas</strong><span>Reparación y mantención de equipos.</span></button>
+<button class="home-card" onclick="showView('proyeccion')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="13" width="4" height="8" rx="1"/><rect x="10" y="8" width="4" height="13" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/></svg></span><strong>Proyección equipos</strong><span>Metros por perforar, término proyectado y coordinación.</span></button>
+<button class="home-card" onclick="showView('coronas')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6h14l-2 14H7zM5 6V3h3v3m3 0V2h3v4m3 0V3h3v3M7 11h10M8 15h8M9 20h6"/></svg></span><strong>Rebaje de Coronas</strong><span>Guardar registro y preparar correo sin PDF.</span></button>
 
 
 </div>
