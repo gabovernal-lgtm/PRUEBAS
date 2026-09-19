@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#153f6d">
 <title>Operaciones DDH</title>
-<!-- v1.17 PRUEBA: carga de capturas con OCR local en navegador para Proyección equipos -->
+<!-- PRUEBA PDF CRONOS: primera página, filtro por 19 equipos -->
 <link rel="manifest" href="manifest.webmanifest">
 <style>
 :root{--blue:#153f6d;--blue2:#0e3158;--soft:#eef3f8;--line:#d6e0e9;--ink:#172033;--muted:#657483;--panel:#fff;--yellow:#f2b544}
@@ -31,7 +31,7 @@ small.warn{display:block;margin-top:8px;color:#7b5a00;background:#fff8dd;border:
 </style>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 </head>
 <body>
 <header class="header"><h1>OPERACIONES DDH</h1><p>Gestión de operaciones, documentos e historial online</p></header>
@@ -212,8 +212,8 @@ small.warn{display:block;margin-top:8px;color:#7b5a00;background:#fff8dd;border:
 <section id="view-proyeccion" class="hidden">
 <div class="panel">
 <div class="module-head"><h2>Proyección equipos</h2><button class="btn btn-white" onclick="showView('home')">← Volver al menú</button></div>
-<div class="note" style="margin-bottom:12px">Complete solo las filas necesarias o cargue una o varias capturas de la tabla de pozos. La aplicación intentará leer <b>Equipo/Sonda, Pozo, PEND. [m] y Fecha término</b>. Revise los datos antes de generar el PDF. Los dos cuadros inferiores permanecen manuales.</div>
-<div class="ocr-box"><div class="ocr-title">CARGAR CAPTURAS DE POZOS</div><div class="ocr-row"><input id="pCapturas" type="file" accept="image/*" multiple><button class="btn btn-blue" id="btnLeerCapturas" onclick="leerCapturasProyeccion()">Leer capturas</button></div><div id="ocrEstado" class="note" style="margin-top:8px">Puede seleccionar varias imágenes. El reconocimiento se realiza en este navegador.</div><div class="ocr-progress"><div id="ocrBar"></div></div></div>
+<div class="note" style="margin-bottom:12px">Complete manualmente o importe el reporte PDF de Cronos. Se lee solo la primera página y se consideran únicamente los 19 equipos autorizados con 0 a 70 m pendientes. Revise los datos antes de generar el PDF. Los dos cuadros inferiores permanecen manuales.</div>
+<div class="ocr-box"><div class="ocr-title">IMPORTAR PDF DE CRONOS · PRIMERA PÁGINA</div><div class="ocr-row"><input id="pCronosPDF" type="file" accept="application/pdf,.pdf"><button class="btn btn-blue" id="btnImportarPDF" onclick="importarPDFCronos()">Importar PDF Cronos</button></div><div id="ocrEstado" class="note" style="margin-top:8px">Seleccione el reporte PDF original de Cronos (no una captura). El archivo se lee en su navegador. Los equipos que no aparezcan se omiten.</div><div class="ocr-progress"><div id="ocrBar"></div></div></div>
 <div class="projection-wrap"><table class="projection-table"><thead><tr><th class="num">N°</th><th>Equipo</th><th>Pozo</th><th class="metros">Metros por perforar</th><th class="fecha">Fecha estimada de término</th><th class="obs">Observaciones</th></tr></thead><tbody id="proyeccionRows"></tbody></table></div>
 <h3 class="section-title">Equipos para coordinación</h3><textarea id="pCoordinacion" class="table-input" style="min-height:95px" placeholder="Ingrese equipos y detalle para coordinación"></textarea>
 <h3 class="section-title">Equipos que necesitan actualización en Cronos</h3><textarea id="pCronos" class="table-input" style="min-height:95px" placeholder="Ingrese equipos y detalle de actualización en Cronos"></textarea>
@@ -289,6 +289,7 @@ function hoyISO(){const d=new Date();return d.getFullYear()+"-"+String(d.getMont
 function fechaCorta(iso){if(!iso)return"";const p=iso.split("-");return p.length===3?`${p[2]}-${p[1]}-${p[0]}`:iso}
 function fechaHoy(){return fechaCorta(hoyISO())}
 function showView(v){
+const EQUIPOS_CRONOS=["CH1-83", "CH1-133", "CH1-135", "CH1-140", "CH1-141", "CH1-142", "CH1-143", "CH1-154", "CH1-155", "CH1-156", "CH1-159", "CH1-160", "CH1-161", "CH1-162", "CH9-63", "CH1-120", "CH1-144", "CH1-158", "CH1-146"];
 const views=["home","traslado","srm","devolucion","minuta","reparacion","flota","proyeccion","historial","config"];
 views.forEach(x=>$("view-"+x)?.classList.toggle("hidden",x!==v));
 ["traslado","srm","devolucion","minuta","reparacion","flota","proyeccion","historial","config"].forEach(x=>$("nav-"+x)?.classList.toggle("active",x===v));
@@ -311,7 +312,7 @@ $("cParaFlota").value=localStorage.getItem("ddh_para_flota")||"";
 $("cCCFlota").value=localStorage.getItem("ddh_cc_flota")||"";
 $("devRows").innerHTML=preguntas.map((q,i)=>`<tr><td class="n">${i+1}</td><td>${esc(q)}</td><td><select class="table-input" id="dCumple${i+1}"><option></option><option${i<5?" selected":""}>Sí</option><option>No</option><option${i===5?" selected":""}>N/A</option></select></td><td><input class="table-input" id="dObs${i+1}"></td></tr>`).join("");
 $("minutaRows").innerHTML=Array.from({length:20},(_,i)=>`<tr><td class="n">${i+1}</td><td><input class="table-input" id="mComp${i+1}" placeholder="Compromiso o acuerdo"></td><td><input class="table-input" id="mResp${i+1}" placeholder="Responsable"></td><td><input class="table-input" id="mFecha${i+1}" type="date"></td></tr>`).join("");
-$("proyeccionRows").innerHTML=Array.from({length:10},(_,i)=>`<tr><td class="num">${i+1}</td><td><input id="pEquipo${i+1}" placeholder="Equipo"></td><td><input id="pPozo${i+1}" placeholder="Pozo"></td><td><input id="pMetros${i+1}" type="number" min="0" step="0.1" inputmode="decimal" placeholder="0"></td><td><input id="pFecha${i+1}" type="date"></td><td><input id="pObs${i+1}" placeholder="Opcional"></td></tr>`).join("");
+$("proyeccionRows").innerHTML=Array.from({length:10},(_,i)=>`<tr><td class="num">${i+1}</td><td><select id="pEquipo${i+1}" class="table-input"><option value="">Seleccione equipo</option>${EQUIPOS_CRONOS.map(e=>`<option value="${e}">${e}</option>`).join("")}</select></td><td><input id="pPozo${i+1}" placeholder="Pozo"></td><td><input id="pMetros${i+1}" type="number" min="0" step="0.1" inputmode="decimal" placeholder="0"></td><td><input id="pFecha${i+1}" type="text" placeholder="DD-MM-AAAA / Terminado"></td><td><input id="pObs${i+1}" placeholder="Opcional"></td></tr>`).join("");
 $("dFoto").addEventListener("change",function(){if(this.files.length>3){alert("Puede seleccionar un máximo de 3 fotografías.");this.value="";}});
 $("rFotos").addEventListener("change",function(){if(this.files.length>6){alert("Puede seleccionar un máximo de 6 fotografías.");this.value="";}});
 $("fFotos").addEventListener("change",function(){if(this.files.length>6){alert("Puede seleccionar un máximo de 6 fotografías.");this.value="";}});
@@ -567,30 +568,56 @@ function extraerFilasCapturaOCR(tsv,imgW){
  }
  const seen=new Set();return rows.filter(r=>{const k=r.equipo+'|'+r.pozo;if(seen.has(k))return false;seen.add(k);return true;});
 }
-async function leerCapturasProyeccion(){
- const input=$("pCapturas"),files=[...(input.files||[])];if(!files.length){alert("Seleccione al menos una captura de la tabla de pozos.");return}
- if(!window.Tesseract){alert("No se pudo cargar el lector de imágenes. Revise la conexión a Internet e inténtelo nuevamente.");return}
- const btn=$("btnLeerCapturas"),estado=$("ocrEstado"),bar=$("ocrBar");btn.disabled=true;let all=[];
+// Lee el texto real del PDF, sin OCR, sin enviar el archivo a un servidor.
+function extraerFilasPDFCronos(items){
+ const groups=[];
+ for(const item of items){
+  const str=String(item.str||'').trim();if(!str)continue;
+  const y=item.transform[5],x=item.transform[4];
+  let group=groups.find(g=>Math.abs(g.y-y)<2.8);
+  if(!group){group={y,items:[]};groups.push(group)}
+  group.items.push({x,str});
+ }
+ const allowed=new Set(EQUIPOS_CRONOS), found=[];
+ for(const g of groups){
+  const line=g.items.sort((a,b)=>a.x-b.x).map(i=>i.str).join(' ').replace(/\s+/g,' ').trim();
+  // En el PDF original cada fila empieza por POZO, RECOMENDACIÓN, SONDA, TIPO, PROYECTO.
+  // Después: fondo propuesto, metros perforados, fondo actual, PEND, avance, rendimiento, días y fecha.
+  const m=line.match(/^((?:DDH|DER|AR|PDR|PDU)\s*[-_]?\s*\d+[A-Z]?)\s+(\S+)\s+(CH\s*[19]\s*[-–]?\s*\d+)\s+(DDH|DER|RC|AGUA)\s+(\S+)\s+(-?[\d.,]+)\s+(-?[\d.,]+)\s+(-?[\d.,]+)\s+(-?[\d.,]+)\s+(\d+(?:[.,]\d+)?\s*%)\s+(-?[\d.,]+)\s+(\d+)\s+(Terminado|\d{2}\s*[-/]\s*\d{2}\s*[-/]\s*\d{4})\b/i);
+  if(!m)continue;
+  const equipo=m[3].toUpperCase().replace(/\s/g,'').replace(/[–]/g,'-').replace(/^CH([19])(\d)/,'CH$1-$2');
+  if(!allowed.has(equipo))continue;
+  const metros=Number(m[9].replace(',','.'));
+  if(!Number.isFinite(metros))continue;
+  const fecha=m[13].replace(/\s/g,'').replace(/\//g,'-');
+  found.push({equipo,pozo:m[1].replace(/\s/g,'').toUpperCase(),metros,fecha,obs:''});
+ }
+ return found;
+}
+async function importarPDFCronos(){
+ const file=$("pCronosPDF").files?.[0];
+ if(!file){alert('Seleccione el archivo PDF original de Cronos.');return}
+ if(!window.pdfjsLib){alert('No se pudo cargar el lector PDF. Revise la conexión a Internet.');return}
+ const btn=$("btnImportarPDF"),estado=$("ocrEstado"),bar=$("ocrBar");btn.disabled=true;
  try{
-  for(let k=0;k<files.length;k++){
-   estado.innerHTML=`Leyendo captura ${k+1} de ${files.length}… <b>puede tardar unos segundos</b>.`;
-   const img=await new Promise((res,rej)=>{const im=new Image(),u=URL.createObjectURL(files[k]);im.onload=()=>{URL.revokeObjectURL(u);res(im)};im.onerror=rej;im.src=u});
-   const result=await Tesseract.recognize(files[k],"eng",{logger:m=>{if(m.status==="recognizing text"){const local=m.progress||0;bar.style.width=`${Math.round(((k+local)/files.length)*100)}%`;}}},{tsv:true});
-   let rows=extraerFilasCapturaOCR(result.data.tsv,img.naturalWidth||img.width);
-   // Si no se reconstruyen filas por posición, no se inventan valores desde texto corrido.
-   all.push(...rows);
-  }
-  const uniq=[];const seen=new Set();for(const r of all){const key=r.equipo+'|'+r.pozo;if(!seen.has(key)){seen.add(key);uniq.push(r)}}
-  // Filtro operativo: incluir únicamente PEND. [m] entre 0 y 70, ambos inclusive.
-  // Los PEND=0 se conservan aunque la fila figure como Terminada. Luego ordena de menor a mayor.
-  const selected=uniq.filter(r=>Number.isFinite(Number(r.metros))&&Number(r.metros)>=0&&Number(r.metros)<=70).sort((a,b)=>Number(a.metros)-Number(b.metros)).slice(0,10);
-  for(let i=1;i<=10;i++){["pEquipo","pPozo","pMetros","pFecha","pObs"].forEach(p=>$(p+i).value="")}
-  selected.forEach((r,i)=>{$("pEquipo"+(i+1)).value=r.equipo;$("pPozo"+(i+1)).value=r.pozo;$("pMetros"+(i+1)).value=r.metros;$("pFecha"+(i+1)).value=r.fecha||"";});
-  bar.style.width="100%";
-  if(selected.length){const descartadas=uniq.filter(r=>Number(r.metros)>70).length;estado.innerHTML=`<span class="ocr-ok"><b>${selected.length} equipo(s) cargado(s)</b> entre 0 y 70 m.</span> ${descartadas} descartado(s) por superar 70 m. Ordenados de menor a mayor. Revise los datos antes de generar el PDF. Los cuadros de Coordinación y Cronos no fueron modificados.`;setStatus(`Capturas procesadas: ${selected.length} fila(s) entre 0 y 70 m cargada(s) en Proyección equipos.`)}
-  else estado.innerHTML='<span class="ocr-warn">No pude reconocer filas con seguridad.</span> Pruebe con una captura más nítida o complete la tabla manualmente.';
- }catch(e){console.error(e);estado.innerHTML='<span class="ocr-warn">No se pudo completar la lectura de la captura.</span> Puede seguir ingresando los datos manualmente.';}
- finally{btn.disabled=false;setTimeout(()=>bar.style.width="0",1800)}
+  estado.textContent='Leyendo el texto de la primera página del PDF…';bar.style.width='25%';
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+  const data=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:new Uint8Array(data)}).promise;
+  const page=await pdf.getPage(1);
+  const content=await page.getTextContent();bar.style.width='70%';
+  const rows=extraerFilasPDFCronos(content.items);
+  const unique=[...new Map(rows.map(r=>[r.equipo+'|'+r.pozo,r])).values()];
+  const selected=unique.filter(r=>r.metros>=0&&r.metros<=70).sort((a,b)=>a.metros-b.metros).slice(0,10);
+  // No borrar los datos anteriores si no se pudo leer correctamente el documento.
+  if(!selected.length){estado.textContent=`No se cargaron equipos. Se detectaron ${unique.length} filas de equipos autorizados; revise que sea el PDF original de Cronos y que existan equipos con 0–70 m. No se modificó la tabla.`;return}
+  for(let i=1;i<=10;i++){["pEquipo","pPozo","pMetros","pFecha","pObs"].forEach(p=>$(p+i).value='')}
+  selected.forEach((r,i)=>{$('pEquipo'+(i+1)).value=r.equipo;$('pPozo'+(i+1)).value=r.pozo;$('pMetros'+(i+1)).value=r.metros;$('pFecha'+(i+1)).value=r.fecha;});
+  const over=unique.filter(r=>r.metros>70).length;
+  estado.textContent=`${selected.length} equipo(s) cargado(s), ${over} descartado(s) por superar 70 m. Solo equipos autorizados. Revise las filas antes de generar el PDF; Coordinación y Cronos no fueron modificados.`;
+  bar.style.width='100%';setStatus(`PDF de Cronos: ${selected.length} equipos importados desde la primera página.`);
+ }catch(err){console.error(err);estado.textContent='No se pudo leer el PDF. Verifique que sea el reporte original y no una imagen convertida a PDF. No se modificaron los datos.'}
+ finally{btn.disabled=false;setTimeout(()=>bar.style.width='0',1600)}
 }
 
 function filasProyeccion(){
@@ -602,7 +629,7 @@ function filasProyeccion(){
   if(!pozo){alert(`Ingrese Pozo en la fila ${i}.`);$("pPozo"+i).focus();return null}
   if(metrosTxt===""||!Number.isFinite(Number(metrosTxt))){alert(`Ingrese Metros por perforar en la fila ${i}.`);$("pMetros"+i).focus();return null}
   if(!fecha){alert(`Ingrese Fecha estimada de término en la fila ${i}.`);$("pFecha"+i).focus();return null}
-  filas.push({equipo,pozo,metros:Number(metrosTxt),fecha:fechaCorta(fecha),obs});
+  filas.push({equipo,pozo,metros:Number(metrosTxt),fecha:/^\d{4}-\d{2}-\d{2}$/.test(fecha)?fechaCorta(fecha):fecha,obs});
  }
  return filas.sort((a,b)=>a.metros-b.metros);
 }
@@ -663,10 +690,10 @@ async function correoProyeccion(){
  if(!filas.length&&!coordinacion&&!cronos){alert("Ingrese al menos un equipo o información de coordinación / Cronos.");return}
  const fecha=fechaHoy();
  const asunto=`Reporte diario de avance equipos DDH + RC (${fecha})`;
- const body=`Estimados:\n\nJunto con saludar, adjunto encontrarán el reporte diario de avance y proyección de pozos DDH + RC.\n\nEl documento adjunto incluye la proyección de término de los equipos, equipos para coordinación y equipos que necesitan actualización en Cronos.\n\nAtentamente,\nDEPARTAMENTO OPERACIONES DDH`;
+ const body=`Estimados:\n\nJunto con saludar, adjunto encontrarán el reporte diario de avance y proyección de pozos DDH + RC.\n\nEl documento adjunto incluye la proyección de término de los equipos, equipos para coordinación y equipos que necesitan actualización en Cronos.\n\nIMPORTANTE: Adjuntar también una captura de pantalla de la información de Cronos utilizada para elaborar el reporte.\n\nAtentamente,\nDEPARTAMENTO OPERACIONES DDH`;
  try{await guardarOnline({tipo:"PROYECCIÓN EQUIPOS",fecha,equipo:filas.map(f=>f.equipo).join(", "),pozo:filas.map(f=>f.pozo).join(", "),sector_origen:"",sector_destino:"",sector:"",supervisor:"",jefe_faena:"",detalle:`${filas.length} equipo(s) | Coordinación: ${coordinacion||"-"} | Cronos: ${cronos||"-"}`,estado:"Correo abierto para revisión",identificador:identificador("PROYECCIÓN EQUIPOS",fecha,...filas.map(f=>`${f.equipo}-${f.pozo}-${f.metros}`))});}catch(e){}
  mailto(asunto,body);
- setStatus("Correo preparado. Recuerda adjuntar el PDF generado antes de enviarlo.");
+ setStatus("Correo preparado. Recuerda adjuntar el PDF generado y una captura de Cronos antes de enviarlo.");
 }
 function limpiarProyeccion(){for(let i=1;i<=10;i++){["pEquipo","pPozo","pMetros","pFecha","pObs"].forEach(p=>$(p+i).value="")}$("pCoordinacion").value="";$("pCronos").value="";setStatus("Proyección equipos limpiada.")}
 
