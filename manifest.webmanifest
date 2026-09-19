@@ -1,0 +1,9 @@
+{
+  "name": "Operaciones DDH",
+  "short_name": "DDH",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#eef3f8",
+  "theme_color": "#153f6d",
+  "icons": [{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
