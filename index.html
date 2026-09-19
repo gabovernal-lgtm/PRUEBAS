@@ -288,8 +288,9 @@ function setStatus(s){$("estado").textContent=s}
 function hoyISO(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function fechaCorta(iso){if(!iso)return"";const p=iso.split("-");return p.length===3?`${p[2]}-${p[1]}-${p[0]}`:iso}
 function fechaHoy(){return fechaCorta(hoyISO())}
-function showView(v){
 const EQUIPOS_CRONOS=["CH1-83", "CH1-133", "CH1-135", "CH1-140", "CH1-141", "CH1-142", "CH1-143", "CH1-154", "CH1-155", "CH1-156", "CH1-159", "CH1-160", "CH1-161", "CH1-162", "CH9-63", "CH1-120", "CH1-144", "CH1-158", "CH1-146"];
+
+function showView(v){
 const views=["home","traslado","srm","devolucion","minuta","reparacion","flota","proyeccion","historial","config"];
 views.forEach(x=>$("view-"+x)?.classList.toggle("hidden",x!==v));
 ["traslado","srm","devolucion","minuta","reparacion","flota","proyeccion","historial","config"].forEach(x=>$("nav-"+x)?.classList.toggle("active",x===v));
