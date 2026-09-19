@@ -1,5 +1,3 @@
-// Configurar exclusivamente con un proyecto Supabase NUEVO para pruebas.
-// La clave publicable (anon / sb_publishable_) puede estar en el navegador.
-// Nunca colocar service_role ni secret keys aquí.
+// Exclusivamente proyecto OPERACIONES-DDH-PRUEBAS. Clave PUBLICABLE, nunca secret/service_role.
 const AUTH_PROJECT_URL = "https://pazzvsnifptsfgrsaznx.supabase.co";
-const AUTH_PUBLIC_KEY = "sb_publishable_crfs_zLmOTX3FTJi0QEh-A_VWeVnYKG";
+const AUTH_PUBLIC_KEY = "sb_publishable_crfs_zLm0TX3FTJi0QEh-A_VVeVnYKG";

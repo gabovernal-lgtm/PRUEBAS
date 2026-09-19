@@ -267,7 +267,7 @@ body{background:linear-gradient(180deg,#e8f2fc 0,#f6f9fd 380px,#f1f6fb 100%)}
 <input id="hBuscar" placeholder="Buscar pozo, equipo, sector..." oninput="renderHistorial()" style="min-width:240px">
 <label>Desde <input id="hDesde" type="date" onchange="renderHistorial()"></label>
 <label>Hasta <input id="hHasta" type="date" onchange="renderHistorial()"></label>
-<button class="btn btn-blue" onclick="exportarHistorialCSV()">Exportar historial filtrado (CSV)</button>
+<button class="btn btn-blue" onclick="exportarHistorialCSV()">Exportar por función (Excel CSV)</button>
 </div>
 <div id="historialEstado" class="note"></div>
 <div class="history-wrap"><div id="historialTabla"></div></div>
@@ -375,11 +375,35 @@ if(!r.ok)throw new Error(`Supabase ${r.status}: ${await r.text()}`);
 return r.status===204?null:await r.json();
 }
 function identificador(...a){return a.join("|").toUpperCase().replace(/\s+/g," ").trim()}
+
+// PRUEBAS: copia estructurada de los campos del módulo (sin fotografías ni credenciales).
+const MODULOS_HISTORIAL={
+ 'TRASLADO':'traslado','SRM':'srm','DEVOLUCIÓN':'devolucion','MINUTA':'minuta',
+ 'REPARACIÓN / MANTENCIÓN CAMIONETA':'reparacion','EQUIPOS FLOTA / SONDAS':'flota',
+ 'PROYECCIÓN EQUIPOS':'proyeccion'
+};
+function datosCompletosHistorial(tipo){
+ const modulo=MODULOS_HISTORIAL[tipo], seccion=document.getElementById('view-'+modulo);
+ if(!seccion)return {};
+ const datos={};
+ seccion.querySelectorAll('input[id],select[id],textarea[id]').forEach(el=>{
+   if(el.type==='file'||el.type==='password'||el.type==='hidden')return;
+   if(el.type==='checkbox')datos[el.id]=el.checked;
+   else if(el.type==='radio'){if(el.checked)datos[el.id]=el.value}
+   else datos[el.id]=el.value;
+ });
+ if(tipo==='MINUTA')datos.compromisos=compromisosMinuta();
+ if(tipo==='PROYECCIÓN EQUIPOS')datos.filas=filasProyeccion()||[];
+ if(tipo==='DEVOLUCIÓN')datos.verificaciones=datosDev().checks;
+ return datos;
+}
+
 async function guardarOnline(reg){
 try{
+reg.datos=datosCompletosHistorial(reg.tipo);
 const q="?select=id&identificador=eq."+encodeURIComponent(reg.identificador)+"&limit=1";
 const existe=await api(q);
-if(existe.length)return true;
+if(existe.length){await api("?id=eq."+encodeURIComponent(existe[0].id),{method:"PATCH",headers:{"Prefer":"return=minimal"},body:JSON.stringify({datos:reg.datos})});return true;}
 await api("",{method:"POST",headers:{"Prefer":"return=minimal"},body:JSON.stringify(reg)});
 return true;
 }catch(e){console.error(e);setStatus("El correo se preparó, pero no fue posible guardar el historial online.");return false}
@@ -394,7 +418,7 @@ if(!req([["tFecha","Fecha"],["tTurno","Turno"],["tEquipo","Equipo"],["tOrigen","
 const d=datosTraslado();
 const reg={tipo:"TRASLADO",fecha:d.fecha,equipo:d.equipo,pozo:"",sector_origen:d.origen,sector_destino:d.destino,sector:"",supervisor:d.supervisor,jefe_faena:d.jefe,detalle:"Turno: "+d.turno,estado:"Correo abierto para revisión",identificador:identificador("TRASLADO",d.fecha,d.equipo,d.origen,d.destino)};
 await guardarOnline(reg);
-setStatus("Traslado guardado en historial online. Abriendo borrador de correo.");
+setStatus("Borrador de traslado preparado; revisa el historial para confirmar el guardado.");
 mailto("SOLICITUD TRASLADO EQUIPO - "+d.equipo,
 `Estimados:\n\nJunto con saludar, encontrarán adjuntos los riesgos y controles asociados al traslado del equipo ${d.equipo}.\n\nSector de origen: ${d.origen}\nSector de destino: ${d.destino}\n\nSolicitamos su revisión y autorización.\n\nUna vez finalizado el traslado, se enviarán los GRT asociados a la actividad.\n\nSaludos,\nDEPARTAMENTO DE OPERACIONES DDH`);
 }
@@ -560,7 +584,7 @@ $("historialEstado").textContent="Cargando historial online...";
 try{
  const todos=[];const tam=1000;let offset=0;
  while(true){
-  const lote=await api(`?select=id,created_at,tipo,fecha,equipo,pozo,sector_origen,sector_destino,sector,supervisor,jefe_faena,detalle&order=created_at.desc,id.desc&limit=${tam}&offset=${offset}`);
+  const lote=await api(`?select=id,created_at,tipo,fecha,equipo,pozo,sector_origen,sector_destino,sector,supervisor,jefe_faena,detalle,datos&order=created_at.desc,id.desc&limit=${tam}&offset=${offset}`);
   todos.push(...lote);offset+=lote.length;
   if(lote.length<tam)break;
   if(offset>=20000){$("historialEstado").textContent="Se cargaron los primeros 20.000 registros. Acota el período para un reporte más extenso.";break;}
@@ -583,11 +607,27 @@ function renderHistorial(){
 }
 function exportarHistorialCSV(){
  const rows=historialFiltrado();if(!rows.length){alert('No hay registros para exportar.');return}
- const campos=['created_at','fecha','tipo','equipo','pozo','sector_origen','sector_destino','sector','supervisor','jefe_faena','detalle'];
- const nombres=['Fecha registro','Fecha solicitud','Tipo','Equipo','Pozo','Sector origen','Sector destino','Sector','Supervisor','Jefe de faena','Detalle'];
+ const tipo=val('hTipo');
+ if(!tipo){alert('Selecciona un tipo de operación para obtener columnas específicas de esa función.');return}
+ const camposBase=[['created_at','Fecha registro'],['fecha','Fecha solicitud'],['tipo','Tipo'],['equipo','Equipo'],['pozo','Pozo'],['sector_origen','Sector origen'],['sector_destino','Sector destino'],['sector','Sector'],['supervisor','Supervisor'],['jefe_faena','Jefe de faena']];
+ const detalles=rows.flatMap(r=>{
+   const d=r.datos||{};
+   if(tipo==='MINUTA'&&Array.isArray(d.compromisos)&&d.compromisos.length)return d.compromisos.map(c=>({...d,'N° compromiso':c.n,'Compromiso':c.compromiso,'Responsable':c.responsable,'Fecha compromiso':c.fecha}));
+   if(tipo==='PROYECCIÓN EQUIPOS'&&Array.isArray(d.filas)&&d.filas.length)return d.filas.map((f,i)=>({...d,'N° fila':i+1,...Object.fromEntries(Object.entries(f).map(([k,v])=>['Proyección '+k,v]))}));
+   return [d];
+ });
+ const claves=[...new Set(detalles.flatMap(d=>Object.keys(d).filter(k=>!['compromisos','filas','verificaciones'].includes(k))))];
+ if(tipo==='DEVOLUCIÓN')for(let i=1;i<=6;i++){claves.push('Verificación '+i+' pregunta','Verificación '+i+' cumplimiento','Verificación '+i+' observación')}
+ const cabecera=[...camposBase.map(x=>x[1]),...claves.map(k=>{const el=document.getElementById(k);return el?.closest('.grid')?.querySelector('label')?.textContent?.trim()||k})];
+ const salida=[];
+ for(const r of rows){const d=r.datos||{};let partes=[d];
+  if(tipo==='MINUTA'&&d.compromisos?.length)partes=d.compromisos.map(c=>({...d,'N° compromiso':c.n,'Compromiso':c.compromiso,'Responsable':c.responsable,'Fecha compromiso':c.fecha}));
+  if(tipo==='PROYECCIÓN EQUIPOS'&&d.filas?.length)partes=d.filas.map((f,i)=>({...d,'N° fila':i+1,...Object.fromEntries(Object.entries(f).map(([k,v])=>['Proyección '+k,v]))}));
+  for(const parte of partes){const x={...parte};if(tipo==='DEVOLUCIÓN')d.verificaciones?.forEach((v,i)=>{x['Verificación '+(i+1)+' pregunta']=v.q;x['Verificación '+(i+1)+' cumplimiento']=v.c;x['Verificación '+(i+1)+' observación']=v.o});salida.push([...camposBase.map(([k])=>r[k]),...claves.map(k=>x[k]??'')]);}
+ }
  const celda=v=>'"'+String(v??'').replace(/^[=+@\-\t\r]/,m=>"'"+m).replace(/"/g,'""')+'"';
- const csv='\uFEFF'+[nombres,...rows.map(r=>campos.map(c=>r[c]))].map(fila=>fila.map(celda).join(';')).join('\r\n');
- const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='HISTORIAL_OPERACIONES_DDH_'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);
+ const csv='\uFEFF'+[cabecera,...salida].map(fila=>fila.map(celda).join(';')).join('\r\n');
+ const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='DDH_'+tipo.replace(/[^A-Z0-9]/gi,'_')+'_'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);
 }
 
 function pdfReady(){return !!(window.jspdf&&window.jspdf.jsPDF)}
