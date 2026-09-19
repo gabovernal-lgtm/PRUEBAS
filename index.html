@@ -570,29 +570,33 @@ function extraerFilasCapturaOCR(tsv,imgW){
 }
 // Lee el texto real del PDF, sin OCR, sin enviar el archivo a un servidor.
 function extraerFilasPDFCronos(items){
- const groups=[];
- for(const item of items){
-  const str=String(item.str||'').trim();if(!str)continue;
-  const y=item.transform[5],x=item.transform[4];
-  let group=groups.find(g=>Math.abs(g.y-y)<2.8);
-  if(!group){group={y,items:[]};groups.push(group)}
-  group.items.push({x,str});
+ // El PDF de Cronos separa visualmente una misma fila en muchos fragmentos de texto.
+ // Se identifica cada sonda por su posición y se reconstruye la fila con los textos
+ // situados a la misma altura, sin exigir que el PDF entregue una línea de texto única.
+ const allowed=new Set(EQUIPOS_CRONOS);
+ const tokens=items.map(i=>({text:String(i.str||'').trim(),x:Number(i.transform?.[4]),y:Number(i.transform?.[5])}))
+   .filter(t=>t.text&&Number.isFinite(t.x)&&Number.isFinite(t.y));
+ const anchors=tokens.filter(t=>/^CH\s*[19]\s*[-–]?\s*\d{2,3}$/i.test(t.text));
+ const found=[];let attempted=0;
+ for(const anchor of anchors){
+   const equipo=anchor.text.toUpperCase().replace(/\s/g,'').replace('–','-').replace(/^CH([19])(\d)/,'CH$1-$2');
+   if(!allowed.has(equipo))continue;
+   const line=tokens.filter(t=>Math.abs(t.y-anchor.y)<=4.5).sort((a,b)=>a.x-b.x);
+   const at=line.findIndex(t=>t===anchor);
+   if(at<0)continue;
+   const left=line.slice(0,at).map(t=>t.text).join(' ');
+   const pm=left.match(/\b(?:DDH|DER|AR|PDR|PDU)\s*[-_]?\s*\d+[A-Z]?\b/i);
+   if(!pm)continue;
+   attempted++;
+   const right=line.slice(at+1).map(t=>t.text).join(' ').replace(/\s+/g,' ').trim();
+   // SONDA TIPO PROYECTO FONDO_PROP METROS_PERF FONDO_ACTUAL PEND AVANCE REND DIAS FECHA
+   const match=right.match(/^\s*(?:DDH|DER|RC|AGUA)\s+\S+\s+(-?[\d.,]+)\s+(-?[\d.,]+)\s+(-?[\d.,]+)\s+(-?[\d.,]+)\s+(?:\d+(?:[.,]\d+)?\s*%)\s+(-?[\d.,]+)\s+(\d+)\s+(Terminado|\d{2}\s*[-/]\s*\d{2}\s*[-/]\s*\d{4})\b/i);
+   if(!match)continue;
+   const metros=Number(match[4].replace(',','.'));
+   if(!Number.isFinite(metros)||metros<0)continue;
+   found.push({equipo,pozo:pm[0].replace(/\s/g,'').toUpperCase(),metros,fecha:match[7].replace(/\s/g,'').replace(/\//g,'-'),obs:''});
  }
- const allowed=new Set(EQUIPOS_CRONOS), found=[];
- for(const g of groups){
-  const line=g.items.sort((a,b)=>a.x-b.x).map(i=>i.str).join(' ').replace(/\s+/g,' ').trim();
-  // En el PDF original cada fila empieza por POZO, RECOMENDACIÓN, SONDA, TIPO, PROYECTO.
-  // Después: fondo propuesto, metros perforados, fondo actual, PEND, avance, rendimiento, días y fecha.
-  const m=line.match(/^((?:DDH|DER|AR|PDR|PDU)\s*[-_]?\s*\d+[A-Z]?)\s+(\S+)\s+(CH\s*[19]\s*[-–]?\s*\d+)\s+(DDH|DER|RC|AGUA)\s+(\S+)\s+(-?[\d.,]+)\s+(-?[\d.,]+)\s+(-?[\d.,]+)\s+(-?[\d.,]+)\s+(\d+(?:[.,]\d+)?\s*%)\s+(-?[\d.,]+)\s+(\d+)\s+(Terminado|\d{2}\s*[-/]\s*\d{2}\s*[-/]\s*\d{4})\b/i);
-  if(!m)continue;
-  const equipo=m[3].toUpperCase().replace(/\s/g,'').replace(/[–]/g,'-').replace(/^CH([19])(\d)/,'CH$1-$2');
-  if(!allowed.has(equipo))continue;
-  const metros=Number(m[9].replace(',','.'));
-  if(!Number.isFinite(metros))continue;
-  const fecha=m[13].replace(/\s/g,'').replace(/\//g,'-');
-  found.push({equipo,pozo:m[1].replace(/\s/g,'').toUpperCase(),metros,fecha,obs:''});
- }
- return found;
+ return {rows:found,anchors:anchors.length,attempted};
 }
 async function importarPDFCronos(){
  const file=$("pCronosPDF").files?.[0];
@@ -606,17 +610,18 @@ async function importarPDFCronos(){
   const pdf=await pdfjsLib.getDocument({data:new Uint8Array(data)}).promise;
   const page=await pdf.getPage(1);
   const content=await page.getTextContent();bar.style.width='70%';
-  const rows=extraerFilasPDFCronos(content.items);
+  const parsed=extraerFilasPDFCronos(content.items);
+  const rows=parsed.rows;
   const unique=[...new Map(rows.map(r=>[r.equipo+'|'+r.pozo,r])).values()];
   const selected=unique.filter(r=>r.metros>=0&&r.metros<=70).sort((a,b)=>a.metros-b.metros).slice(0,10);
   // No borrar los datos anteriores si no se pudo leer correctamente el documento.
-  if(!selected.length){estado.textContent=`No se cargaron equipos. Se detectaron ${unique.length} filas de equipos autorizados; revise que sea el PDF original de Cronos y que existan equipos con 0–70 m. No se modificó la tabla.`;return}
+  if(!selected.length){estado.textContent=`No se cargaron equipos. Se detectaron ${parsed.anchors} sondas en el texto, ${parsed.attempted} filas de equipos autorizados y ${unique.length} filas interpretadas; revise el PDF o el detalle en la consola. No se modificó la tabla.`;return}
   for(let i=1;i<=10;i++){["pEquipo","pPozo","pMetros","pFecha","pObs"].forEach(p=>$(p+i).value='')}
   selected.forEach((r,i)=>{$('pEquipo'+(i+1)).value=r.equipo;$('pPozo'+(i+1)).value=r.pozo;$('pMetros'+(i+1)).value=r.metros;$('pFecha'+(i+1)).value=r.fecha;});
   const over=unique.filter(r=>r.metros>70).length;
-  estado.textContent=`${selected.length} equipo(s) cargado(s), ${over} descartado(s) por superar 70 m. Solo equipos autorizados. Revise las filas antes de generar el PDF; Coordinación y Cronos no fueron modificados.`;
+  estado.textContent=`${selected.length} equipo(s) cargado(s), ${over} descartado(s) por superar 70 m. De ${parsed.attempted} filas autorizadas identificadas. Revise las filas antes de generar el PDF; Coordinación y Cronos no fueron modificados.`;
   bar.style.width='100%';setStatus(`PDF de Cronos: ${selected.length} equipos importados desde la primera página.`);
- }catch(err){console.error(err);estado.textContent='No se pudo leer el PDF. Verifique que sea el reporte original y no una imagen convertida a PDF. No se modificaron los datos.'}
+ }catch(err){console.error(err);estado.textContent='Error al leer el PDF: '+(err?.message||String(err))+'. No se modificaron los datos.'}
  finally{btn.disabled=false;setTimeout(()=>bar.style.width='0',1600)}
 }
 
