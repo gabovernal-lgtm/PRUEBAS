@@ -110,12 +110,12 @@ body{background:linear-gradient(180deg,#e8f2fc 0,#f6f9fd 380px,#f1f6fb 100%)}
 <label>Turno:</label><select id="tTurno"><option></option><option>Turno A</option><option>Turno B</option></select>
 <label>Camioneta escolta:</label><input id="tCamioneta">
 <label>Conductor escolta:</label><input id="tConductorEscolta">
-<label>Equipo a trasladar:</label><input id="tEquipo" placeholder="Ej.: 1-161">
+<label>Equipo a trasladar:</label><select id="tEquipo" onchange="seleccionOtro(this)"><option value="">Seleccionar...</option><option value="CH1-83">CH1-83</option><option value="CH1-133">CH1-133</option><option value="CH1-135">CH1-135</option><option value="CH1-140">CH1-140</option><option value="CH1-141">CH1-141</option><option value="CH1-142">CH1-142</option><option value="CH1-143">CH1-143</option><option value="CH1-154">CH1-154</option><option value="CH1-155">CH1-155</option><option value="CH1-156">CH1-156</option><option value="CH1-159">CH1-159</option><option value="CH1-160">CH1-160</option><option value="CH1-161">CH1-161</option><option value="CH1-162">CH1-162</option><option value="CH9-63">CH9-63</option><option value="CH1-120">CH1-120</option><option value="CH1-144">CH1-144</option><option value="CH1-158">CH1-158</option><option value="CH1-146">CH1-146</option><option value="__otro__">Otro (escribir manualmente)...</option></select>
 <label>Conductor de sonda:</label><input id="tConductorSonda">
 <label>Sector de origen:</label><input id="tOrigen">
 <label>Sector de destino:</label><input id="tDestino">
-<label>Supervisor:</label><input id="tSupervisor">
-<label>Jefe de faena:</label><input id="tJefe">
+<label>Supervisor:</label><select id="tSupervisor" onchange="seleccionOtro(this)"><option value="">Seleccionar...</option><option value="CRISTOBAL AEDO">CRISTOBAL AEDO</option><option value="BRAULIO URRUTIA">BRAULIO URRUTIA</option><option value="WILLIAMS HIDALGO">WILLIAMS HIDALGO</option><option value="FABIAN ROJAS">FABIAN ROJAS</option><option value="CRISTIAN PEREZ">CRISTIAN PEREZ</option><option value="PATRICIO MARDONES">PATRICIO MARDONES</option><option value="RODRIGO SALAS">RODRIGO SALAS</option><option value="GONZALO ADASME S.">GONZALO ADASME S.</option><option value="JORGE LAZO">JORGE LAZO</option><option value="CARLO ALARCON">CARLO ALARCON</option><option value="MAURICIO MELENDEZ">MAURICIO MELENDEZ</option><option value="YESSENIA ARAYA">YESSENIA ARAYA</option><option value="GABRIEL VERNAL L.">GABRIEL VERNAL L.</option><option value="RAUL CERDA">RAUL CERDA</option><option value="GIOVANI MUÑOZ">GIOVANI MUÑOZ</option><option value="CRISTIAN MELLADO">CRISTIAN MELLADO</option><option value="ALDO CALQUIN">ALDO CALQUIN</option><option value="HUMBERTO SALFATE">HUMBERTO SALFATE</option><option value="JUAN LANAS">JUAN LANAS</option><option value="RICARDO HERNANDEZ">RICARDO HERNANDEZ</option><option value="IGNACIO MORALES">IGNACIO MORALES</option><option value="KARLA FLORES">KARLA FLORES</option><option value="MANUEL GRANDON">MANUEL GRANDON</option><option value="VICTOR OROZCO">VICTOR OROZCO</option><option value="MARIO MUÑOZ">MARIO MUÑOZ</option><option value="DANILO ROMERO O.">DANILO ROMERO O.</option><option value="LUIS URETA">LUIS URETA</option><option value="BORIS ZEPEDA">BORIS ZEPEDA</option><option value="CLAUDIO VALDEBENITO">CLAUDIO VALDEBENITO</option><option value="LUIS VIDAL">LUIS VIDAL</option><option value="MARCOS CONTRERAS">MARCOS CONTRERAS</option><option value="__otro__">Otro (escribir manualmente)...</option></select>
+<label>Jefe de faena:</label><select id="tJefe" onchange="seleccionOtro(this)"><option value="">Seleccionar...</option><option value="JAIME AGUILERA">JAIME AGUILERA</option><option value="RICARDO SANCHEZ">RICARDO SANCHEZ</option><option value="MARIO SANTANDER">MARIO SANTANDER</option><option value="LUIS VIDAL">LUIS VIDAL</option><option value="CRISTOBAL AEDO">CRISTOBAL AEDO</option><option value="MARIO MUÑOZ">MARIO MUÑOZ</option><option value="GABRIEL VERNAL L.">GABRIEL VERNAL L.</option><option value="__otro__">Otro (escribir manualmente)...</option></select>
 <label>Controles adicionales:</label><textarea id="tControles"></textarea>
 </div>
 <div class="actions">
@@ -132,7 +132,7 @@ body{background:linear-gradient(180deg,#e8f2fc 0,#f6f9fd 380px,#f1f6fb 100%)}
 <div class="module-head"><h2>Correo SRM</h2><button class="btn btn-white" onclick="showView('home')">← Volver al menú</button></div>
 <div class="grid">
 <label>Nombre de pozo:</label><input id="sPozo">
-<label>Equipo sonda:</label><input id="sEquipo">
+<label>Equipo sonda:</label><select id="sEquipo" onchange="seleccionOtro(this)"><option value="">Seleccionar...</option><option value="CH1-83">CH1-83</option><option value="CH1-133">CH1-133</option><option value="CH1-135">CH1-135</option><option value="CH1-140">CH1-140</option><option value="CH1-141">CH1-141</option><option value="CH1-142">CH1-142</option><option value="CH1-143">CH1-143</option><option value="CH1-154">CH1-154</option><option value="CH1-155">CH1-155</option><option value="CH1-156">CH1-156</option><option value="CH1-159">CH1-159</option><option value="CH1-160">CH1-160</option><option value="CH1-161">CH1-161</option><option value="CH1-162">CH1-162</option><option value="CH9-63">CH9-63</option><option value="CH1-120">CH1-120</option><option value="CH1-144">CH1-144</option><option value="CH1-158">CH1-158</option><option value="CH1-146">CH1-146</option><option value="__otro__">Otro (escribir manualmente)...</option></select>
 <label>Fondo del TSRM:</label><input id="sFondo">
 </div>
 <div class="actions">
@@ -153,10 +153,10 @@ body{background:linear-gradient(180deg,#e8f2fc 0,#f6f9fd 380px,#f1f6fb 100%)}
 <div class="date-box"><b>Fecha:</b> <span id="dFechaFmt"></span> <span class="note">- se actualiza automáticamente al día actual.</span></div>
 <div class="grid">
 <label>Pozo:</label><input id="dPozo">
-<label>Equipo de perforación:</label><input id="dEquipo">
+<label>Equipo de perforación:</label><select id="dEquipo" onchange="seleccionOtro(this)"><option value="">Seleccionar...</option><option value="CH1-83">CH1-83</option><option value="CH1-133">CH1-133</option><option value="CH1-135">CH1-135</option><option value="CH1-140">CH1-140</option><option value="CH1-141">CH1-141</option><option value="CH1-142">CH1-142</option><option value="CH1-143">CH1-143</option><option value="CH1-154">CH1-154</option><option value="CH1-155">CH1-155</option><option value="CH1-156">CH1-156</option><option value="CH1-159">CH1-159</option><option value="CH1-160">CH1-160</option><option value="CH1-161">CH1-161</option><option value="CH1-162">CH1-162</option><option value="CH9-63">CH9-63</option><option value="CH1-120">CH1-120</option><option value="CH1-144">CH1-144</option><option value="CH1-158">CH1-158</option><option value="CH1-146">CH1-146</option><option value="__otro__">Otro (escribir manualmente)...</option></select>
 <label>Sector:</label><input id="dSector">
-<label>Supervisor:</label><input id="dSupervisor">
-<label>Jefe de faena:</label><input id="dJefe">
+<label>Supervisor:</label><select id="dSupervisor" onchange="seleccionOtro(this)"><option value="">Seleccionar...</option><option value="CRISTOBAL AEDO">CRISTOBAL AEDO</option><option value="BRAULIO URRUTIA">BRAULIO URRUTIA</option><option value="WILLIAMS HIDALGO">WILLIAMS HIDALGO</option><option value="FABIAN ROJAS">FABIAN ROJAS</option><option value="CRISTIAN PEREZ">CRISTIAN PEREZ</option><option value="PATRICIO MARDONES">PATRICIO MARDONES</option><option value="RODRIGO SALAS">RODRIGO SALAS</option><option value="GONZALO ADASME S.">GONZALO ADASME S.</option><option value="JORGE LAZO">JORGE LAZO</option><option value="CARLO ALARCON">CARLO ALARCON</option><option value="MAURICIO MELENDEZ">MAURICIO MELENDEZ</option><option value="YESSENIA ARAYA">YESSENIA ARAYA</option><option value="GABRIEL VERNAL L.">GABRIEL VERNAL L.</option><option value="RAUL CERDA">RAUL CERDA</option><option value="GIOVANI MUÑOZ">GIOVANI MUÑOZ</option><option value="CRISTIAN MELLADO">CRISTIAN MELLADO</option><option value="ALDO CALQUIN">ALDO CALQUIN</option><option value="HUMBERTO SALFATE">HUMBERTO SALFATE</option><option value="JUAN LANAS">JUAN LANAS</option><option value="RICARDO HERNANDEZ">RICARDO HERNANDEZ</option><option value="IGNACIO MORALES">IGNACIO MORALES</option><option value="KARLA FLORES">KARLA FLORES</option><option value="MANUEL GRANDON">MANUEL GRANDON</option><option value="VICTOR OROZCO">VICTOR OROZCO</option><option value="MARIO MUÑOZ">MARIO MUÑOZ</option><option value="DANILO ROMERO O.">DANILO ROMERO O.</option><option value="LUIS URETA">LUIS URETA</option><option value="BORIS ZEPEDA">BORIS ZEPEDA</option><option value="CLAUDIO VALDEBENITO">CLAUDIO VALDEBENITO</option><option value="LUIS VIDAL">LUIS VIDAL</option><option value="MARCOS CONTRERAS">MARCOS CONTRERAS</option><option value="__otro__">Otro (escribir manualmente)...</option></select>
+<label>Jefe de faena:</label><select id="dJefe" onchange="seleccionOtro(this)"><option value="">Seleccionar...</option><option value="JAIME AGUILERA">JAIME AGUILERA</option><option value="RICARDO SANCHEZ">RICARDO SANCHEZ</option><option value="MARIO SANTANDER">MARIO SANTANDER</option><option value="LUIS VIDAL">LUIS VIDAL</option><option value="CRISTOBAL AEDO">CRISTOBAL AEDO</option><option value="MARIO MUÑOZ">MARIO MUÑOZ</option><option value="GABRIEL VERNAL L.">GABRIEL VERNAL L.</option><option value="__otro__">Otro (escribir manualmente)...</option></select>
 </div>
 
 <h3 class="section-title">Verificación de plataforma</h3>
@@ -254,7 +254,7 @@ body{background:linear-gradient(180deg,#e8f2fc 0,#f6f9fd 380px,#f1f6fb 100%)}
 <div class="projection-wrap"><table class="projection-table"><thead><tr><th class="num">N°</th><th>Equipo</th><th>Pozo</th><th class="metros">Metros por perforar</th><th class="fecha">Fecha estimada de término</th><th class="obs">Observaciones</th></tr></thead><tbody id="proyeccionRows"></tbody></table></div>
 <h3 class="section-title">Equipos para coordinación</h3><textarea id="pCoordinacion" class="table-input" style="min-height:95px" placeholder="Ingrese equipos y detalle para coordinación"></textarea>
 <h3 class="section-title">Equipos que necesitan actualización en Cronos</h3><textarea id="pCronos" class="table-input" style="min-height:95px" placeholder="Ingrese equipos y detalle de actualización en Cronos"></textarea>
-<div class="actions"><button class="btn btn-light" onclick="pdfProyeccion()">Generar PDF</button><button class="btn btn-blue" onclick="pdfProyeccion(true)">Compartir PDF adjunto (prueba)</button><button class="btn btn-blue" onclick="correoProyeccion()">Abrir correo para revisar</button><button class="btn btn-white" onclick="limpiarProyeccion()">Limpiar</button></div><small class="warn">Genera primero el PDF y luego adjúntalo manualmente al correo preparado por la aplicación.</small>
+<div class="actions"><button class="btn btn-light" onclick="pdfProyeccion()">Generar PDF</button><button class="btn btn-blue" onclick="correoProyeccion()">Abrir correo para revisar</button><button class="btn btn-white" onclick="limpiarProyeccion()">Limpiar</button></div><small class="warn">Genera primero el PDF y luego adjúntalo manualmente al correo preparado por la aplicación.</small>
 </div>
 </section>
 
@@ -263,11 +263,12 @@ body{background:linear-gradient(180deg,#e8f2fc 0,#f6f9fd 380px,#f1f6fb 100%)}
 <div class="module-head"><h2>Historial de operaciones</h2><button class="btn btn-white" onclick="showView('home')">← Volver al menú</button></div>
 <div class="toolbar">
 <button class="btn btn-light" onclick="cargarHistorial()">Actualizar historial</button>
-<select id="hTipo" onchange="renderHistorial()"><option value="">Todos los tipos</option><option>TRASLADO</option><option>SRM</option><option>DEVOLUCIÓN</option><option>MINUTA</option><option>REPARACIÓN / MANTENCIÓN CAMIONETA</option><option>EQUIPOS FLOTA / SONDAS</option><option>PROYECCIÓN EQUIPOS</option></select>
-<input id="hBuscar" placeholder="Buscar pozo, equipo, sector..." oninput="renderHistorial()" style="min-width:240px">
+<select id="hTipo" onchange="renderHistorial()"><option value="">Todos los tipos</option><option>TRASLADO</option><option>SRM</option><option>DEVOLUCIÓN</option><option>MINUTA</option><option>REPARACIÓN / MANTENCIÓN CAMIONETA</option><option>EQUIPOS FLOTA / SONDAS</option></select>
+<select id="hEquipo" onchange="renderHistorial()"><option value="">Todos los equipos</option></select>
+<input id="hBuscar" placeholder="Buscar pozo, supervisor, sector..." oninput="renderHistorial()" style="min-width:240px">
 <label>Desde <input id="hDesde" type="date" onchange="renderHistorial()"></label>
 <label>Hasta <input id="hHasta" type="date" onchange="renderHistorial()"></label>
-<button class="btn btn-blue" onclick="exportarHistorialCSV()">Exportar por función (Excel CSV)</button>
+<button class="btn btn-blue" onclick="exportarHistorialPDF()">Descargar PDF filtrado</button>
 </div>
 <div id="historialEstado" class="note"></div>
 <div class="history-wrap"><div id="historialTabla"></div></div>
@@ -401,9 +402,18 @@ function datosCompletosHistorial(tipo){
 async function guardarOnline(reg){
 try{
 reg.datos=datosCompletosHistorial(reg.tipo);
-const q="?select=id&identificador=eq."+encodeURIComponent(reg.identificador)+"&limit=1";
+// La cuenta se toma de la sesión autenticada, nunca de un campo editable.
+const cuentaRegistro=String(authSession?.user?.email||"").trim().toLowerCase();
+if(!cuentaRegistro)throw new Error("No se pudo identificar la cuenta que realiza el registro.");
+const q="?select=id,datos&identificador=eq."+encodeURIComponent(reg.identificador)+"&limit=1";
 const existe=await api(q);
-if(existe.length){await api("?id=eq."+encodeURIComponent(existe[0].id),{method:"PATCH",headers:{"Prefer":"return=minimal"},body:JSON.stringify({datos:reg.datos})});return true;}
+if(existe.length){
+ // Una actualización no cambia la autoría de un registro anterior.
+ const anterior=existe[0].datos&&typeof existe[0].datos==="object"?existe[0].datos:{};
+ if(anterior.cuenta_registro)reg.datos.cuenta_registro=anterior.cuenta_registro;
+ await api("?id=eq."+encodeURIComponent(existe[0].id),{method:"PATCH",headers:{"Prefer":"return=minimal"},body:JSON.stringify({datos:reg.datos})});return true;
+}
+reg.datos.cuenta_registro=cuentaRegistro;
 await api("",{method:"POST",headers:{"Prefer":"return=minimal"},body:JSON.stringify(reg)});
 return true;
 }catch(e){console.error(e);setStatus("El correo se preparó, pero no fue posible guardar el historial online.");return false}
@@ -589,45 +599,87 @@ try{
   if(lote.length<tam)break;
   if(offset>=20000){$("historialEstado").textContent="Se cargaron los primeros 20.000 registros. Acota el período para un reporte más extenso.";break;}
  }
- historialCache=todos;renderHistorial();
+ historialCache=todos.filter(o=>o.tipo!=="PROYECCIÓN EQUIPOS");actualizarEquiposHistorial();renderHistorial();
 }catch(e){console.error(e);$("historialEstado").textContent="No fue posible conectar con Supabase. Revisa la configuración y tus permisos.";$("historialTabla").innerHTML=""}
 }
+function actualizarEquiposHistorial(){
+ const sel=$("hEquipo"),actual=sel.value;
+ const equipos=[...new Set(historialCache.map(r=>String(r.equipo||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es',{numeric:true}));
+ sel.replaceChildren(new Option("Todos los equipos",""),...equipos.map(e=>new Option(e,e)));
+ if(equipos.includes(actual))sel.value=actual;
+}
 function historialFiltrado(){
- const tipo=val("hTipo"),q=val("hBuscar").toLowerCase(),desde=val("hDesde"),hasta=val("hHasta");
+ const tipo=val("hTipo"),equipo=val("hEquipo"),q=val("hBuscar").toLowerCase(),desde=val("hDesde"),hasta=val("hHasta");
  return historialCache.filter(o=>{
   const fechaLocal=o.created_at?new Date(o.created_at):null;const dia=fechaLocal?`${fechaLocal.getFullYear()}-${String(fechaLocal.getMonth()+1).padStart(2,'0')}-${String(fechaLocal.getDate()).padStart(2,'0')}`:'';
-  return (!tipo||o.tipo===tipo)&&(!q||JSON.stringify(o).toLowerCase().includes(q))&&(!desde||dia>=desde)&&(!hasta||dia<=hasta);
+  return (!tipo||o.tipo===tipo)&&(!equipo||String(o.equipo||"").trim()===equipo)&&(!q||JSON.stringify(o).toLowerCase().includes(q))&&(!desde||dia>=desde)&&(!hasta||dia<=hasta);
  });
 }
 function renderHistorial(){
  const rows=historialFiltrado();
  $("historialEstado").textContent=`${rows.length} registro(s) según filtros · ${historialCache.length} cargado(s). Fechas según creación del registro.`;
  if(!rows.length){$("historialTabla").innerHTML='<div class="note" style="padding:20px;text-align:center">No hay registros para mostrar.</div>';return}
- $("historialTabla").innerHTML=`<table class="history-table"><thead><tr><th>Fecha de registro</th><th>Fecha solicitud</th><th>Tipo</th><th>Pozo</th><th>Equipo</th><th>Sector / Origen → Destino</th><th>Supervisor</th><th>Jefe de faena</th><th>Detalle</th></tr></thead><tbody>${rows.map(o=>{const sec=(o.sector_origen||o.sector_destino)?`${o.sector_origen||""} → ${o.sector_destino||""}`:(o.sector||"");const fechaReg=o.created_at?new Date(o.created_at).toLocaleString('es-CL'):'';return `<tr><td>${esc(fechaReg)}</td><td>${esc(o.fecha)}</td><td><span class="pill">${esc(o.tipo)}</span></td><td>${esc(o.pozo)}</td><td>${esc(o.equipo)}</td><td>${esc(sec)}</td><td>${esc(o.supervisor)}</td><td>${esc(o.jefe_faena)}</td><td>${esc(o.detalle)}</td></tr>`}).join("")}</tbody></table>`;
+ $("historialTabla").innerHTML=`<table class="history-table"><thead><tr><th>Fecha de registro</th><th>Cuenta de registro</th><th>Fecha solicitud</th><th>Tipo</th><th>Pozo</th><th>Equipo</th><th>Sector / Origen → Destino</th><th>Supervisor</th><th>Jefe de faena</th><th>Detalle</th></tr></thead><tbody>${rows.map(o=>{const sec=(o.sector_origen||o.sector_destino)?`${o.sector_origen||""} → ${o.sector_destino||""}`:(o.sector||"");const fechaReg=o.created_at?new Date(o.created_at).toLocaleString('es-CL'):'';return `<tr><td>${esc(fechaReg)}</td><td>${esc(o.datos?.cuenta_registro||"No registrado")}</td><td>${esc(o.fecha)}</td><td><span class="pill">${esc(o.tipo)}</span></td><td>${esc(o.pozo)}</td><td>${esc(o.equipo)}</td><td>${esc(sec)}</td><td>${esc(o.supervisor)}</td><td>${esc(o.jefe_faena)}</td><td>${esc(o.detalle)}</td></tr>`}).join("")}</tbody></table>`;
+}
+
+function seleccionOtro(sel){
+ if(sel.value!=="__otro__")return;
+ const escrito=prompt("Ingrese el nombre o equipo:");
+ if(!escrito||!escrito.trim()){sel.value="";return;}
+ const opt=document.createElement("option");opt.value=escrito.trim();opt.textContent=escrito.trim()+" (manual)";sel.insertBefore(opt,sel.lastElementChild);sel.value=opt.value;
+}
+function exportarHistorialPDF(){
+ const tipo=val("hTipo");
+ if(!tipo){alert("Selecciona el tipo de operación para generar un PDF diferenciado.");return;}
+ const rows=historialFiltrado();
+ if(!rows.length){alert("No hay registros con los filtros seleccionados.");return;}
+ if(!pdfReady()){alert("No se pudo cargar el generador de PDF. Comprueba la conexión e intenta nuevamente.");return;}
+ const doc=new window.jspdf.jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
+ if(typeof doc.autoTable!=="function"){alert("No se pudo cargar la tabla PDF. Comprueba la conexión e intenta nuevamente.");return;}
+ const nombres={"TRASLADO":"TRASLADOS DE EQUIPO","SRM":"TRICONOS SRM","DEVOLUCIÓN":"DEVOLUCIONES DE PLATAFORMA","MINUTA":"APOYO MINUTAS","REPARACIÓN / MANTENCIÓN CAMIONETA":"CAMIONETAS","EQUIPOS FLOTA / SONDAS":"EQUIPOS FLOTA / SONDAS"};
+ const nombre=nombres[tipo]||tipo;
+ const equipo=val("hEquipo"),desde=val("hDesde"),hasta=val("hHasta"),busqueda=val("hBuscar");
+ const texto=v=>String(v??"").replace(/[\u0000-\u001f]/g," ").trim();
+ const fecha=v=>v?new Date(v).toLocaleString("es-CL"):"";
+ const detalle=(r,k)=>{const d=r.datos&&typeof r.datos==="object"?r.datos:{};return texto(d[k]??r[k]);};
+ const campos={
+  "TRASLADO":[["Fecha registro",r=>fecha(r.created_at)],["Fecha solicitud",r=>texto(r.fecha)],["Equipo",r=>texto(r.equipo)],["Pozo",r=>texto(r.pozo)],["Origen",r=>texto(r.sector_origen)],["Destino",r=>texto(r.sector_destino)],["Supervisor",r=>texto(r.supervisor)],["Jefe de faena",r=>texto(r.jefe_faena)],["Detalle",r=>texto(r.detalle)]],
+  "SRM":[["Fecha registro",r=>fecha(r.created_at)],["Fecha solicitud",r=>texto(r.fecha)],["Equipo",r=>texto(r.equipo)],["Pozo",r=>texto(r.pozo)],["Fondo TSRM",r=>detalle(r,"fondoTSRM")||texto(r.detalle)],["Supervisor",r=>texto(r.supervisor)],["Detalle",r=>texto(r.detalle)]],
+  "DEVOLUCIÓN":[["Fecha registro",r=>fecha(r.created_at)],["Fecha solicitud",r=>texto(r.fecha)],["Equipo",r=>texto(r.equipo)],["Pozo",r=>texto(r.pozo)],["Sector",r=>texto(r.sector)],["Supervisor",r=>texto(r.supervisor)],["Jefe de faena",r=>texto(r.jefe_faena)],["Observaciones",r=>texto(r.detalle)]],
+  "MINUTA":[["Fecha registro",r=>fecha(r.created_at)],["Fecha reunión",r=>texto(r.fecha)],["Reunión / detalle",r=>texto(r.detalle)],["Supervisor",r=>texto(r.supervisor)],["Jefe de faena",r=>texto(r.jefe_faena)]],
+  "REPARACIÓN / MANTENCIÓN CAMIONETA":[["Fecha registro",r=>fecha(r.created_at)],["Fecha solicitud",r=>texto(r.fecha)],["Camioneta / N° interno",r=>texto(r.equipo)],["Supervisor",r=>texto(r.supervisor)],["Detalle",r=>texto(r.detalle)]],
+  "EQUIPOS FLOTA / SONDAS":[["Fecha registro",r=>fecha(r.created_at)],["Fecha solicitud",r=>texto(r.fecha)],["Equipo",r=>texto(r.equipo)],["Supervisor",r=>texto(r.supervisor)],["Detalle",r=>texto(r.detalle)]]
+ };
+ const cols=[...[ ["Cuenta de registro",r=>texto(r.datos?.cuenta_registro)||"No registrado"] ],...(campos[tipo]||campos["TRASLADO"])];
+ const header=()=>{
+  doc.setFillColor(18,60,105);doc.rect(0,0,297,22,"F");
+  doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(15);doc.text("OPERACIONES DDH  |  "+nombre,12,14);
+  doc.setTextColor(32,48,65);doc.setFont("helvetica","normal");doc.setFontSize(9);
+  const periodo=(desde||"Sin inicio")+" al "+(hasta||"Sin término");
+  doc.text("Equipo: "+(equipo||"Todos")+"     Período: "+periodo+"     Registros: "+rows.length,12,29);
+  if(busqueda)doc.text("Búsqueda: "+texto(busqueda).slice(0,95),12,34);
+ };
+ header();
+ doc.autoTable({startY:busqueda?39:35,head:[cols.map(c=>c[0])],body:rows.map(r=>cols.map(c=>c[1](r))),theme:"grid",margin:{left:9,right:9,top:busqueda?39:35,bottom:16},styles:{font:"helvetica",fontSize:7,cellPadding:2,overflow:"linebreak",valign:"top"},headStyles:{fillColor:[18,60,105],textColor:255,fontStyle:"bold"},alternateRowStyles:{fillColor:[241,246,251]},didDrawPage:()=>{if(doc.internal.getCurrentPageInfo().pageNumber>1)header();doc.setFontSize(8);doc.setTextColor(95,110,125);doc.text("Emitido: "+new Date().toLocaleString("es-CL"),10,203);doc.text("Página "+doc.internal.getCurrentPageInfo().pageNumber,276,203);}});
+ const slug=t=>t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/gi,"_").replace(/^_|_$/g,"");
+ doc.save("DDH_"+slug(tipo)+"_"+(equipo?slug(equipo)+"_":"")+new Date().toISOString().slice(0,10)+".pdf");
 }
 function exportarHistorialCSV(){
  const rows=historialFiltrado();if(!rows.length){alert('No hay registros para exportar.');return}
- const tipo=val('hTipo');
- if(!tipo){alert('Selecciona un tipo de operación para obtener columnas específicas de esa función.');return}
- const camposBase=[['created_at','Fecha registro'],['fecha','Fecha solicitud'],['tipo','Tipo'],['equipo','Equipo'],['pozo','Pozo'],['sector_origen','Sector origen'],['sector_destino','Sector destino'],['sector','Sector'],['supervisor','Supervisor'],['jefe_faena','Jefe de faena']];
- const detalles=rows.flatMap(r=>{
-   const d=r.datos||{};
-   if(tipo==='MINUTA'&&Array.isArray(d.compromisos)&&d.compromisos.length)return d.compromisos.map(c=>({...d,'N° compromiso':c.n,'Compromiso':c.compromiso,'Responsable':c.responsable,'Fecha compromiso':c.fecha}));
-   if(tipo==='PROYECCIÓN EQUIPOS'&&Array.isArray(d.filas)&&d.filas.length)return d.filas.map((f,i)=>({...d,'N° fila':i+1,...Object.fromEntries(Object.entries(f).map(([k,v])=>['Proyección '+k,v]))}));
-   return [d];
- });
- const claves=[...new Set(detalles.flatMap(d=>Object.keys(d).filter(k=>!['compromisos','filas','verificaciones'].includes(k))))];
- if(tipo==='DEVOLUCIÓN')for(let i=1;i<=6;i++){claves.push('Verificación '+i+' pregunta','Verificación '+i+' cumplimiento','Verificación '+i+' observación')}
- const cabecera=[...camposBase.map(x=>x[1]),...claves.map(k=>{const el=document.getElementById(k);return el?.closest('.grid')?.querySelector('label')?.textContent?.trim()||k})];
- const salida=[];
- for(const r of rows){const d=r.datos||{};let partes=[d];
-  if(tipo==='MINUTA'&&d.compromisos?.length)partes=d.compromisos.map(c=>({...d,'N° compromiso':c.n,'Compromiso':c.compromiso,'Responsable':c.responsable,'Fecha compromiso':c.fecha}));
-  if(tipo==='PROYECCIÓN EQUIPOS'&&d.filas?.length)partes=d.filas.map((f,i)=>({...d,'N° fila':i+1,...Object.fromEntries(Object.entries(f).map(([k,v])=>['Proyección '+k,v]))}));
-  for(const parte of partes){const x={...parte};if(tipo==='DEVOLUCIÓN')d.verificaciones?.forEach((v,i)=>{x['Verificación '+(i+1)+' pregunta']=v.q;x['Verificación '+(i+1)+' cumplimiento']=v.c;x['Verificación '+(i+1)+' observación']=v.o});salida.push([...camposBase.map(([k])=>r[k]),...claves.map(k=>x[k]??'')]);}
- }
- const celda=v=>'"'+String(v??'').replace(/^[=+@\-\t\r]/,m=>"'"+m).replace(/"/g,'""')+'"';
- const csv='\uFEFF'+[cabecera,...salida].map(fila=>fila.map(celda).join(';')).join('\r\n');
- const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='DDH_'+tipo.replace(/[^A-Z0-9]/gi,'_')+'_'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);
+ const tipo=val('hTipo');if(!tipo){alert('Selecciona un tipo de operación para exportar columnas específicas.');return}
+ const base=[['created_at','Fecha registro'],['fecha','Fecha solicitud'],['tipo','Tipo'],['equipo','Equipo'],['pozo','Pozo'],['sector_origen','Sector origen'],['sector_destino','Sector destino'],['sector','Sector'],['supervisor','Supervisor'],['jefe_faena','Jefe de faena'],['detalle','Detalle']];
+ const expandir=r=>{const d=r.datos||{};
+  if(tipo==='MINUTA'&&Array.isArray(d.compromisos)&&d.compromisos.length)return d.compromisos.map(c=>({...d,'N° compromiso':c.n,'Compromiso':c.compromiso,'Responsable':c.responsable,'Fecha compromiso':c.fecha}));
+  if(tipo==='DEVOLUCIÓN'){const x={...d};(d.verificaciones||[]).forEach((v,i)=>{x['Verificación '+(i+1)+' pregunta']=v.q;x['Verificación '+(i+1)+' cumplimiento']=v.c;x['Verificación '+(i+1)+' observación']=v.o});return [x]}
+  return [d];
+ };
+ const claves=[...new Set(rows.flatMap(r=>expandir(r).flatMap(d=>Object.keys(d).filter(k=>!['compromisos','filas','verificaciones'].includes(k)))))];
+ const cols=[...base.map(x=>x[1]),...claves];
+ const clean=v=>String(v??'').replace(/[\u0000-\u001f]/g,' ').trim();
+ const cell=v=>'<td style="mso-number-format:\'\@\'">'+esc(clean(v))+'</td>';
+ const data=rows.flatMap(r=>expandir(r).map(d=>'<tr>'+base.map(([k])=>cell(k==='created_at'&&r[k]?new Date(r[k]).toLocaleString('es-CL'):r[k])).join('')+claves.map(k=>cell(d[k])).join('')+'</tr>')).join('');
+ const html='<!doctype html><html><head><meta charset="utf-8"></head><body><h2 style="font-family:Arial;color:#123c69">OPERACIONES DDH · '+esc(tipo)+'</h2><p style="font-family:Arial">Historial exportado: '+new Date().toLocaleString('es-CL')+' · '+rows.length+' registros</p><table border="1" style="border-collapse:collapse;font-family:Arial;font-size:11pt"><thead><tr>'+cols.map(c=>'<th style="background:#123c69;color:#ffffff;padding:9px">'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'+data+'</tbody></table></body></html>';
+ const url=URL.createObjectURL(new Blob(['\uFEFF'+html],{type:'application/vnd.ms-excel;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='DDH_'+tipo.replace(/[^A-Z0-9]/gi,'_')+'_'+new Date().toISOString().slice(0,10)+'.xls';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);
 }
 
 function pdfReady(){return !!(window.jspdf&&window.jspdf.jsPDF)}
@@ -830,7 +882,7 @@ async function correoProyeccion(){
  const fecha=fechaHoy();
  const asunto=`Reporte diario de avance equipos DDH + RC (${fecha})`;
  const body=`Estimados:\n\nJunto con saludar, adjunto encontrarán el reporte diario de avance y proyección de pozos DDH + RC.\n\nEl documento adjunto incluye la proyección de término de los equipos, equipos para coordinación y equipos que necesitan actualización en Cronos.\n\nIMPORTANTE: Adjuntar también una captura de pantalla de la información de Cronos utilizada para elaborar el reporte.\n\nAtentamente,\nDEPARTAMENTO OPERACIONES DDH`;
- try{await guardarOnline({tipo:"PROYECCIÓN EQUIPOS",fecha,equipo:filas.map(f=>f.equipo).join(", "),pozo:filas.map(f=>f.pozo).join(", "),sector_origen:"",sector_destino:"",sector:"",supervisor:"",jefe_faena:"",detalle:`${filas.length} equipo(s) | Coordinación: ${coordinacion||"-"} | Cronos: ${cronos||"-"}`,estado:"Correo abierto para revisión",identificador:identificador("PROYECCIÓN EQUIPOS",fecha,...filas.map(f=>`${f.equipo}-${f.pozo}-${f.metros}`))});}catch(e){}
+
  mailto(asunto,body);
  setStatus("Correo preparado. Recuerda adjuntar el PDF generado y una captura de Cronos antes de enviarlo.");
 }
