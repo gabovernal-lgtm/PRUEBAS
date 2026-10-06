@@ -984,56 +984,123 @@ doc.autoTable({
 });
 
 let y=doc.lastAutoTable.finalY+6;
-function sectionBar(title){
- doc.setFillColor(225,225,225);doc.setDrawColor(70,70,70);
- doc.rect(x,y,w,5.5,"FD");
- doc.setFont("helvetica","bold");doc.setFontSize(7.2);doc.text(title,105,y+3.8,{align:"center"});
- y+=5.5;
+const secciones=[
+  [
+    "1. CONTROLES PREVIOS - EQUIPO SONDA",
+    [
+      [
+        "Chequeo mecánico del equipo sonda",
+        "Verificar condición mecánica general antes del traslado: neumáticos, torque, frenos, dirección, niveles, luces, estructura y elementos críticos del equipo segun IT asociado.",
+        "Mecánico / Conductor"
+      ],
+      [
+        "Mantención y documentación",
+        "Confirmar mantención vigente, torque al día y documentación requerida para realizar el movimiento. Supervisor visa planificación y documentación.",
+        "Supervisor"
+      ],
+      [
+        "Condición para conducción",
+        "Realizar check list del equipo. Verificar condiciones del conductor, acceso seguro a cabina y disponibilidad de elementos requeridos para el traslado.",
+        "Conductor sonda"
+      ],
+      [
+        "Comunicación del equipo",
+        "Comprobar funcionamiento del sistema de comunicación a utilizar en el proceso, antes de iniciar el movimiento.",
+        "Conductor / Supervisor"
+      ]
+    ]
+  ],
+  [
+    "2. CONTROLES PREVIOS - CAMIONETA ESCOLTA",
+    [
+      [
+        "Chequeo general camioneta escolta",
+        "Verificar neumáticos, torque, frenos, dirección, niveles, luces, baliza, estructura y condiciones generales del vehículo.",
+        "Conductor escolta"
+      ],
+      [
+        "Subida y bajada del vehículo",
+        "Aplicar tres puntos de apoyo al subir y bajar. Mantener atención a superficies irregulares y condiciones del entorno.",
+        "Conductor escolta"
+      ],
+      [
+        "Letrero y elementos de escolta",
+        "Verificar instalación y aseguramiento del letrero de escolta, baliza y elementos necesarios para efectuar el acompañamiento.",
+        "Conductor escolta"
+      ],
+      [
+        "Equipo de comunicación",
+        "Comprobar funcionamiento de radio y frecuencia definida para el traslado antes de iniciar la maniobra.",
+        "Conductor / Supervisor"
+      ]
+    ]
+  ],
+  [
+    "3. CONTROLES PARA LA EJECUCIÓN DEL TRASLADO",
+    [
+      [
+        "Chequeo previo de la ruta",
+        "Reconocer y evaluar previamente el camino completo entre origen y destino. Identificar restricciones, puntos críticos, condiciones climáticas, visibilidad y tránsito de equipos.",
+        "Supervisor / Conductores"
+      ],
+      [
+        "Comunicaciones durante el traslado",
+        "Confirmar correcto funcionamiento de radios de sonda y escolta, frecuencia radial definida y comunicación permanente durante toda la maniobra.",
+        "Todos los involucrados"
+      ],
+      [
+        "Evaluación de plataforma de destino",
+        "Evaluar la plataforma antes del ingreso de la sonda: accesos, espacio disponible, condiciones del terreno, pretiles y ubicación segura del equipo.",
+        "Supervisor"
+      ],
+      [
+        "Interacción en plataforma de origen",
+        "OBLIGATORIO: evaluar y controlar la interacción con equipos y personas presentes en la plataforma de origen antes de iniciar el movimiento, evitar interacción con el pozo, caseta, vehiculos, etc. .",
+        "Supervisor / Equipo"
+      ],
+      [
+        "Interaccion en plataforma de destino",
+        "OBLIGATORIO: REALIZAR EVALUACION DE NUEVA PLATAFORMA, considerando controles para evitar interaccion equipo - persona, segregar areas de trabajo cuando sea necesario y asegurar la correcta comuncacion entre las personas involucradas al momento de relizar maniobras con euipos en movimiento dentro de plataforma.",
+        "Supervisor / Operador Equipo Sonda / Conductor"
+      ],
+      [
+        "Ejecución del traslado",
+        "Mantener conducción defensiva, velocidad acorde a las condiciones, atención permanente a frecuencia radial y detener la actividad ante cualquier cambio no controlado.",
+        "Conductor / Escolta"
+      ]
+    ]
+  ]
+];
+function tablaControles(title,body){
+ // El título forma parte de la tabla para acompañar al encabezado en los saltos de página.
+ doc.autoTable({
+  startY:y,margin:{left:x,right:19,top:19,bottom:19},tableWidth:w,theme:"grid",
+  head:[[{content:title,colSpan:3,styles:{fillColor:[16,58,103],textColor:[255,255,255],halign:"center",fontStyle:"bold",fontSize:7.2,cellPadding:1.7}}],
+        ["CHEQUEO / CONTROL","CRITERIO / MEDIDA DE CONTROL","RESPONSABLE / OBS."]],
+  body:body,
+  styles:{fontSize:6.1,cellPadding:1.2,lineColor:[145,160,180],lineWidth:.15,overflow:"linebreak",valign:"middle",textColor:[0,0,0]},
+  headStyles:{fillColor:[232,238,245],textColor:[0,0,0],fontStyle:"normal",halign:"left",fontSize:6.1},
+  columnStyles:{0:{cellWidth:44},1:{cellWidth:92},2:{cellWidth:36}},
+  rowPageBreak:"avoid"
+ });
+ y=doc.lastAutoTable.finalY+3;
 }
+secciones.forEach(([title,body])=>tablaControles(title,body));
 
-sectionBar("CONTROLES EQUIPO SONDA");
-const obsSonda="Chequeo de puntos críticos (estado de neumáticos - torque en neumáticos - luces traseras/delanteras - frenos - dirección - niveles - estructura).\\n\\nSe debe confirmar la mantención y torque al día del equipo a trasladar.\\n\\nSe debe revisar que toda la documentación está al día, Supervisor debe visar toda la documentación y planificación antes de iniciar la maniobra.\\n\\nSUPERVISOR DEBE GENERAR GRT ASOCIADO A LA ACTIVIDAD Y ENVIAR RESPALDO.";
-const eq=[
- ["Atrapamiento por condiciones del camino","Evaluación de entorno,\\nconducción a la defensiva,\\natención a la frecuencia radial,\\ndetención de la actividad.",{content:obsSonda,rowSpan:4}],
- ["Colisión por baja visibilidad","Evaluación del entorno, no realizar el movimiento existiendo condiciones que impidan la visibilidad."],
- ["Condiciones climáticas","Chequeo de condiciones climáticas, evaluación del entorno y caminos post condición climática, atención a frecuencia radial, autorización de geólogo"],
- ["Volcamiento, atropello, choque y colisión","Check list de equipo, Fatiga y somnolencia, evaluación del entorno, respetar velocidades, manejo a la defensiva, conocimiento del circuito mina y atención constante de frecuencia radial.\\nEl reconocimiento de la ruta previo al traslado es OBLIGATORIO.\\nSe debe asegurar que los equipos de comunicación funcionen"]
-];
 doc.autoTable({
- startY:y,margin:{left:x,right:19},tableWidth:w,theme:"grid",
- head:[["RIESGOS ASOCIADOS","MEDIDA DE CONTROL","OBSERVACIONES"]],
- body:eq,
- styles:{fontSize:5.65,cellPadding:1.05,lineColor:[70,70,70],lineWidth:.15,overflow:"linebreak",valign:"middle",textColor:[0,0,0]},
- headStyles:{fillColor:[225,225,225],textColor:[0,0,0],fontStyle:"bold",halign:"center"},
- columnStyles:{0:{cellWidth:50},1:{cellWidth:52},2:{cellWidth:70}}
+ startY:y,margin:{left:x,right:19,top:19,bottom:19},tableWidth:w,theme:"grid",
+ body:[["CONTROL DOCUMENTAL: El supervisor debe generar el GRT asociado a la actividad y enviar respaldo antes de ejecutar el traslado."]],
+ styles:{fontSize:6.2,cellPadding:1.8,lineColor:[235,190,0],lineWidth:.15,fillColor:[255,249,204],textColor:[16,58,103],overflow:"linebreak"},
+ rowPageBreak:"avoid"
 });
-y=doc.lastAutoTable.finalY+4;
+y=doc.lastAutoTable.finalY+3;
 
-sectionBar("CONTROLES CAMIONETA ESCOLTA");
-const obsEscolta="Chequeo de puntos críticos (estado de neumáticos - torque en neumáticos - luces traseras/delanteras - frenos - dirección - niveles - estructura).\\n\\nSe debe confirmar la mantención y torque al día del equipo a trasladar.\\n\\nSe debe revisar que toda la documentación está al día, Supervisor debe visar toda la documentación y planificación antes de iniciar la maniobra.";
-const escolta=[
- ["Volcamiento, atropello, choque y colisión","Check list de camioneta, Fatiga y somnolencia, evaluación del entorno, respetar velocidades, manejo a la defensiva, conocimiento del circuito mina y atención constante de frecuencia radial.",{content:obsEscolta,rowSpan:6}],
- ["Colisión por baja visibilidad","Evaluación del entorno, no realizar el movimiento existiendo condiciones que impidan la visibilidad."],
- ["Condiciones climáticas","Chequeo de condiciones climáticas, evaluación del entorno y caminos post condición climática, atención de frecuencia radial, autorización de geólogo senior del turno."],
- ["Atrapamiento por condiciones del camino","Evaluación de entorno, conducción a la defensiva, atención a la frecuencia radial, detención de la actividad."],
- ["Interacción con equipos de apoyo","Aviso radial previo al traslado."],
- ["Atricción de manos por cierre de barandas de camión sonda.","Chequeo y aplicación de controles en la instalación de letrero escolta y baliza, 3 puntos de apoyo siempre."]
-];
 doc.autoTable({
- startY:y,margin:{left:x,right:19},tableWidth:w,theme:"grid",
- head:[["RIESGOS ASOCIADOS","MEDIDA DE CONTROL","OBSERVACIONES"]],
- body:escolta,
- styles:{fontSize:5.35,cellPadding:.9,lineColor:[70,70,70],lineWidth:.15,overflow:"linebreak",valign:"middle",textColor:[0,0,0]},
- headStyles:{fillColor:[225,225,225],textColor:[0,0,0],fontStyle:"bold",halign:"center"},
- columnStyles:{0:{cellWidth:50},1:{cellWidth:52},2:{cellWidth:70}}
-});
-y=doc.lastAutoTable.finalY+4;
-
-sectionBar("CONTROLES ADICIONALES");
-doc.autoTable({
- startY:y,margin:{left:x,right:19},tableWidth:w,theme:"grid",
+ startY:y,margin:{left:x,right:19,top:19,bottom:19},tableWidth:w,theme:"grid",
+ head:[["CONTROLES ADICIONALES / OBSERVACIONES"]],
  body:[[d.controles||""]],
- styles:{fontSize:6.2,cellPadding:2.2,lineColor:[70,70,70],lineWidth:.15,minCellHeight:14,halign:"center",valign:"middle",textColor:[0,0,0]}
+ styles:{fontSize:6.2,cellPadding:2.2,lineColor:[145,160,180],lineWidth:.15,minCellHeight:14,halign:"left",valign:"top",textColor:[0,0,0],overflow:"linebreak"},
+ headStyles:{fillColor:[255,255,255],textColor:[0,0,0],fontStyle:"normal",minCellHeight:0,cellPadding:1.5}
 });
 
 doc.save(`SOLICITUD_TRASLADO_EQUIPO_${d.equipo.replace(/[\\/:*?"<>|]/g,"_")}.pdf`);
