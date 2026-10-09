@@ -894,7 +894,6 @@ async function pdfProyeccion(compartir=false){
  if(!pdfReady())return fallbackPrint();
  const {jsPDF}=window.jspdf,doc=new jsPDF({unit:"mm",format:"a4",orientation:"landscape"}),fecha=fechaHoy();
  try{doc.addImage(LOGO_GEOTEC,"PNG",12,7,36,17)}catch(e){}
- try{doc.addImage(LOGO_COLLAHUASI,"PNG",251,7,33,17)}catch(e){}
  doc.setFont("helvetica","bold");doc.setTextColor(21,63,109);doc.setFontSize(14);doc.text("PROYECCIÓN DE EQUIPOS",148.5,18,{align:"center"});
  doc.setFontSize(8);doc.text("EQUIPOS CON 0 A 100 METROS REMANENTES",148.5,24,{align:"center"});
  doc.setFont("helvetica","normal");doc.text("Fecha: "+fecha+"  |  Equipos: "+filas.length,12,32);
@@ -904,7 +903,39 @@ async function pdfProyeccion(compartir=false){
  styles:{fontSize:7,cellPadding:2,overflow:"linebreak",valign:"top",lineColor:[205,218,230],lineWidth:.15},
  headStyles:{fillColor:[21,63,109],textColor:[255,255,255],fontStyle:"bold"},
  columnStyles:{0:{cellWidth:23},1:{cellWidth:30},2:{cellWidth:20},3:{cellWidth:18},4:{cellWidth:32},5:{cellWidth:28},6:{cellWidth:36},7:{cellWidth:18,halign:"center"},8:{cellWidth:26},9:{cellWidth:49}},
- alternateRowStyles:{fillColor:[246,249,252]}});
+ alternateRowStyles:{fillColor:[246,249,252]},
+ didParseCell:function(data){
+  if(data.section!=="body")return;
+  const fila=filas[data.row.index];if(!fila)return;
+  if(data.column.index===2){
+   const m=fila.metros;
+   data.cell.styles.fillColor=m<=30?[240,111,101]:m<=60?[249,171,85]:[255,229,113];
+   data.cell.styles.textColor=[33,39,48];
+   data.cell.styles.fontStyle="bold";
+  }
+  if(data.column.index===8){
+   const colores={"Grupo 1":[191,220,251],"Grupo 2":[194,231,199],"Grupo 3":[221,205,248],"Por definir":[231,234,239]};
+   data.cell.styles.fillColor=colores[fila.grupo]||colores["Por definir"];
+   data.cell.styles.textColor=[33,39,48];
+   data.cell.styles.fontStyle="bold";
+  }
+ }});
+ const coordinacion=val("pCoordinacion").trim();
+ if(coordinacion){
+  const lineas=doc.splitTextToSize(coordinacion,270);
+  const alto=Math.max(18,12+lineas.length*4);
+  let y=doc.lastAutoTable.finalY+7;
+  if(y+alto>195){doc.addPage();y=16}
+  doc.setFillColor(21,63,109);doc.rect(9,y,279,8,"F");
+  doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);doc.setFontSize(9);
+  doc.text("EQUIPOS PARA COORDINACIÓN",12,y+5.4);
+  doc.setFont("helvetica","normal");doc.setTextColor(30,39,53);doc.setFontSize(8);
+  const lineHeight=4.3;
+  for(let j=0;j<lineas.length;j++){
+   if(y+13+j*lineHeight>195){doc.addPage();y=3-j*lineHeight}
+   doc.text(lineas[j],12,y+13+j*lineHeight);
+  }
+ }
  const total=doc.getNumberOfPages();for(let i=1;i<=total;i++){doc.setPage(i);doc.setFontSize(7);doc.setTextColor(100);doc.text("DEPARTAMENTO OPERACIONES DDH",9,203);doc.text("Página "+i+" de "+total,288,203,{align:"right"})}
  const name="PROYECCION_EQUIPOS_"+fecha+".pdf";
  if(compartir&&navigator.share&&navigator.canShare){const file=new File([doc.output("blob")],name,{type:"application/pdf"});if(navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:"Proyección de equipos"});return}catch(e){if(e.name==="AbortError")return}}}
