@@ -832,7 +832,7 @@ function extraerFilasPDFProyeccion(items){
   const estado=rel(380,470);
   const noRecepcion=/no\s+recepcionado/i.test(estado);
   const recepcion=/recepcionado/i.test(estado)&&!noRecepcion?"✓":"X";
-  found.push({equipo,pozo,metros,turnos:String(turnos),sector:rel(200,240),proximo:rel(240,267),recepcion,grupo:"Por definir",obs:""});
+  found.push({equipo,pozo,metros,turnos:String(turnos),sector:row.filter(t=>t.x>=258&&t.x<289).sort((a,b)=>a.x-b.x).map(t=>t.text).join(" ").trim(),proximo:row.filter(t=>t.x>=289&&t.x<320).sort((a,b)=>a.x-b.x).map(t=>t.text).join(" ").trim(),recepcion,grupo:"Por definir",obs:""});
  }
  return found;
 }
