@@ -832,24 +832,23 @@ function extraerFilasPDFProyeccion(items){
   const estado=rel(380,470);
   const noRecepcion=/no\s+recepcionado/i.test(estado);
   const recepcion=/recepcionado/i.test(estado)&&!noRecepcion?"✓":"X";
-  // Identificar sectores por vocabulario, no por cortes arbitrarios de PDF.js.
-  // La postura se toma de los fragmentos que siguen a ambos sectores.
+  // Buscar sectores en la fila completa desde TURNOS: pdf.js puede fusionar
+  // el inicio de ORIGEN con el fragmento anterior (x inferior a 249).
   const names=["EX RAMPA FASE 13","RAMPA CHUSCA","ROSARIO SUR","FASE 16","FASE 17","TRONCAL","UIJNA","UJINA","PUMA"];
-  const tail=row.filter(t=>t.x>=249&&t.x<370).sort((p,q)=>p.x-q.x).map(t=>t.text).join(" ").replace(/\s+/g," ").trim();
-  let remaining=tail;
-  function takeSector(){
-   for(const name of names){
-    if(remaining.toUpperCase()===name||remaining.toUpperCase().startsWith(name+" ")){
-     const found=remaining.slice(0,name.length);
-     remaining=remaining.slice(name.length).trim();
-     return found;
-    }
+  const tail=row.filter(t=>t.x>=210&&t.x<377).sort((p,q)=>p.x-q.x).map(t=>t.text).join(" ").replace(/\s+/g," ").trim();
+  const sectorPattern=new RegExp("\\b(?:"+names.join("|")+")\\b","i");
+  let rest=tail,sector="",proximo="";
+  const first=rest.match(sectorPattern);
+  if(first){
+   sector=first[0];
+   rest=rest.slice(first.index+first[0].length).trim();
+   const second=rest.match(sectorPattern);
+   if(second&&second.index===0){
+    proximo=second[0];
+    rest=rest.slice(second[0].length).trim();
    }
-   return "";
   }
-  const sector=takeSector(),proximo=takeSector();
-  // El campo PROGRAMADO numérico está al final de la próxima postura.
-  const postura=remaining.replace(/\s+\d+(?:[.,]\d+)?\s*$/,"").trim();
+  const postura=rest.replace(/\s+\d+(?:[.,]\d+)?\s*$/,"").trim();
   found.push({equipo,pozo,metros,turnos:String(turnos),sector,proximo,postura,recepcion,grupo:"Por definir",obs:""});
  }
  return found;
