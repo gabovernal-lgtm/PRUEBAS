@@ -832,21 +832,22 @@ function extraerFilasPDFProyeccion(items){
   const estado=rel(380,470);
   const noRecepcion=/no\s+recepcionado/i.test(estado);
   const recepcion=/recepcionado/i.test(estado)&&!noRecepcion?"✓":"X";
-  const sectorItems=row.filter(t=>t.x>=257&&t.x<320).sort((a,b)=>a.x-b.x);
-  let sector=sectorItems.filter(t=>t.x<289).map(t=>t.text).join(" ").trim();
-  let proximo=sectorItems.filter(t=>t.x>=289).map(t=>t.text).join(" ").trim();
-  // pdf.js puede unir dos celdas contiguas en un solo fragmento.
-  // Recuperar la separación cuando el primer fragmento incluye ambos sectores.
-  if(!proximo&&sector){
-   const sectores=["EX RAMPA FASE 13","RAMPA CHUSCA","ROSARIO SUR","PUMA","TRONCAL","UJINA","UIJNA","FASE 16","FASE 17"];
-   const texto=sector.replace(/\s+/g," ").trim();
-   for(const a of sectores.sort((x,y)=>y.length-x.length)){
-    if(texto.toUpperCase().startsWith(a+" ")){
-     const restante=texto.slice(a.length).trim();
-     if(restante){sector=texto.slice(0,a.length);proximo=restante;break}
-    }
+  // En estos PDF pdf.js entrega ambos sectores en un solo item (p.ej. "ROSARIO SUR TRONCAL").
+  // La próxima postura empieza cerca de x=320; no debe confundirse con próximo sector.
+  const sectorTexto=row.filter(t=>t.x>=257&&t.x<289).sort((a,b)=>a.x-b.x).map(t=>t.text).join(" ").replace(/\s+/g," ").trim();
+  const sectorNombres=["EX RAMPA FASE 13","RAMPA CHUSCA","ROSARIO SUR","FASE 16","FASE 17","TRONCAL","UIJNA","UJINA","PUMA"];
+  let sector=sectorTexto,proximo="";
+  for(const nombre of sectorNombres){
+   if(sectorTexto.toUpperCase()===nombre){sector=sectorTexto;break}
+   if(sectorTexto.toUpperCase().startsWith(nombre+" ")){
+    sector=sectorTexto.slice(0,nombre.length).trim();
+    proximo=sectorTexto.slice(nombre.length).trim();
+    break;
    }
   }
+  // Si pdf.js los separa físicamente, respetar el contenido de la segunda celda.
+  const proximoSeparado=row.filter(t=>t.x>=289&&t.x<319).sort((a,b)=>a.x-b.x).map(t=>t.text).join(" ").trim();
+  if(!proximo&&proximoSeparado&&sectorTexto)proximo=proximoSeparado;
   found.push({equipo,pozo,metros,turnos:String(turnos),sector,proximo,recepcion,grupo:"Por definir",obs:""});
  }
  return found;
