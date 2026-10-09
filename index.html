@@ -829,9 +829,9 @@ function extraerFilasPDFProyeccion(items){
   if(!pozo||!/\d+(?:[.,]\d+)?\s*%/.test(avance))continue;
   const metros=numeroOCR(remanenteTxt),turnos=numeroOCR(turnosTxt);
   if(metros===null||turnos===null||metros<0)continue;
-  const estado=rel(380,470);
-  const noRecepcion=/no\s+recepcionado/i.test(estado);
-  const recepcion=/recepcionado/i.test(estado)&&!noRecepcion?"✓":"X";
+  const estado=row.filter(t=>t.x>=430).sort((a,b)=>a.x-b.x).map(t=>t.text).join(" ").trim();
+  const noRecepcion=/\bno\s+recepcionad[oa]\b/i.test(estado);
+  const recepcion=!noRecepcion&&/\brecepcionad[oa]\b/i.test(estado)?"✓":"X";
   // Buscar sectores en la fila completa desde TURNOS: pdf.js puede fusionar
   // el inicio de ORIGEN con el fragmento anterior (x inferior a 249).
   const names=["EX RAMPA FASE 13","RAMPA CHUSCA","ROSARIO SUR","FASE 16","FASE 17","TRONCAL","UIJNA","UJINA","PUMA"];
