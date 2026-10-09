@@ -835,7 +835,7 @@ function extraerFilasPDFProyeccion(items){
   // Identificar sectores por vocabulario, no por cortes arbitrarios de PDF.js.
   // La postura se toma de los fragmentos que siguen a ambos sectores.
   const names=["EX RAMPA FASE 13","RAMPA CHUSCA","ROSARIO SUR","FASE 16","FASE 17","TRONCAL","UIJNA","UJINA","PUMA"];
-  const tail=row.filter(t=>t.x>=257&&t.x<377).sort((p,q)=>p.x-q.x).map(t=>t.text).join(" ").replace(/\s+/g," ").trim();
+  const tail=row.filter(t=>t.x>=249&&t.x<370).sort((p,q)=>p.x-q.x).map(t=>t.text).join(" ").replace(/\s+/g," ").trim();
   let remaining=tail;
   function takeSector(){
    for(const name of names){
