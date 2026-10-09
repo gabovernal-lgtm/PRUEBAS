@@ -291,7 +291,7 @@ body{background:linear-gradient(#fff,#f6faff)!important}
 <div class="module-head"><h2>Proyección equipos</h2><button class="btn btn-white" onclick="showView('home')">← Volver al menú</button></div>
 <div class="note" style="margin-bottom:12px">Complete manualmente o importe un PDF de Cronos o de Proyección. Se consideran equipos con 0 a 100 metros remanentes. Revise los datos antes de generar el reporte.</div>
 <div class="ocr-box"><div class="ocr-title">IMPORTAR PDF CRONOS O PROYECCIÓN · PRIMERA PÁGINA</div><div class="ocr-row"><input id="pCronosPDF" type="file" accept="application/pdf,.pdf"><button class="btn btn-blue" id="btnImportarPDF" onclick="importarPDFCronos()">Importar PDF</button></div><div id="ocrEstado" class="note" style="margin-top:8px">Seleccione un PDF original de Cronos o Proyección con texto seleccionable. El archivo se lee en su navegador.</div><div class="ocr-progress"><div id="ocrBar"></div></div></div>
-<div class="projection-wrap"><table class="projection-table" style="min-width:1450px"><thead><tr><th class="num">N°</th><th>Equipo</th><th>Pozo</th><th>Metros remanentes</th><th>Turnos restantes</th><th>Origen</th><th>Destino</th><th>Recepción plataforma</th><th>Grupo de recursos</th><th style="min-width:270px">Observaciones</th></tr></thead><tbody id="proyeccionRows"></tbody></table></div>
+<div class="projection-wrap"><table class="projection-table" style="min-width:1450px"><thead><tr><th class="num">N°</th><th>Equipo</th><th>Pozo</th><th>Metros remanentes</th><th>Turnos restantes</th><th>Origen</th><th>Destino</th><th>Próxima postura</th><th>Recepción plataforma</th><th>Grupo de recursos</th><th style="min-width:270px">Observaciones</th></tr></thead><tbody id="proyeccionRows"></tbody></table></div>
 <h3 class="section-title">Equipos para coordinación</h3><textarea id="pCoordinacion" class="table-input" style="min-height:95px" placeholder="Ingrese equipos y detalle para coordinación"></textarea>
 
 <div class="actions"><button class="btn btn-light" onclick="pdfProyeccion()">Generar PDF</button><button class="btn btn-blue" onclick="correoProyeccion()">Abrir correo para revisar</button><button class="btn btn-white" onclick="limpiarProyeccion()">Limpiar</button></div><small class="warn">Genera primero el PDF y luego adjúntalo manualmente al correo preparado por la aplicación.</small>
@@ -422,7 +422,7 @@ $("cParaFlota").value=localStorage.getItem("ddh_para_flota")||"";
 $("cCCFlota").value=localStorage.getItem("ddh_cc_flota")||"";
 $("devRows").innerHTML=preguntas.map((q,i)=>`<tr><td class="n">${i+1}</td><td>${esc(q)}</td><td><select class="table-input" id="dCumple${i+1}"><option></option><option${i<5?" selected":""}>Sí</option><option>No</option><option${i===5?" selected":""}>N/A</option></select></td><td><input class="table-input" id="dObs${i+1}"></td></tr>`).join("");
 $("minutaRows").innerHTML=Array.from({length:20},(_,i)=>`<tr><td class="n">${i+1}</td><td><input class="table-input" id="mComp${i+1}" placeholder="Compromiso o acuerdo"></td><td><input class="table-input" id="mResp${i+1}" placeholder="Responsable"></td><td><input class="table-input" id="mFecha${i+1}" type="date"></td></tr>`).join("");
-$("proyeccionRows").innerHTML=Array.from({length:20},(_,i)=>`<tr><td class="num">${i+1}</td><td><select id="pEquipo${i+1}" class="table-input"><option value="">Seleccione equipo</option>${EQUIPOS_CRONOS.map(e=>`<option value="${e}">${e}</option>`).join("")}</select></td><td><input id="pPozo${i+1}" placeholder="Pozo"></td><td><input id="pMetros${i+1}" type="number" min="0" step="0.01" placeholder="0"></td><td><input id="pTurnos${i+1}" type="number" min="0" step="1" placeholder="—"></td><td><input id="pSector${i+1}" placeholder="Origen"></td><td><input id="pProximo${i+1}" placeholder="Destino"></td><td><select id="pRecepcion${i+1}" class="table-input"><option value="X">X</option><option value="✓">✓</option></select></td><td><select id="pGrupo${i+1}" class="table-input"><option>Por definir</option><option>Grupo 1</option><option>Grupo 2</option><option>Grupo 3</option></select></td><td><textarea id="pObs${i+1}" class="table-input" rows="3" style="min-width:250px;resize:vertical" placeholder="Observaciones extensas"></textarea></td></tr>`).join("");
+$("proyeccionRows").innerHTML=Array.from({length:20},(_,i)=>`<tr><td class="num">${i+1}</td><td><select id="pEquipo${i+1}" class="table-input"><option value="">Seleccione equipo</option>${EQUIPOS_CRONOS.map(e=>`<option value="${e}">${e}</option>`).join("")}</select></td><td><input id="pPozo${i+1}" placeholder="Pozo"></td><td><input id="pMetros${i+1}" type="number" min="0" step="0.01" placeholder="0"></td><td><input id="pTurnos${i+1}" type="number" min="0" step="1" placeholder="—"></td><td><input id="pSector${i+1}" placeholder="Origen"></td><td><input id="pProximo${i+1}" placeholder="Destino"></td><td><input id="pPostura${i+1}" placeholder="Próxima postura"></td><td><select id="pRecepcion${i+1}" class="table-input"><option value="X">X</option><option value="✓">✓</option></select></td><td><select id="pGrupo${i+1}" class="table-input"><option>Por definir</option><option>Grupo 1</option><option>Grupo 2</option><option>Grupo 3</option></select></td><td><textarea id="pObs${i+1}" class="table-input" rows="3" style="min-width:250px;resize:vertical" placeholder="Observaciones extensas"></textarea></td></tr>`).join("");
 $("dFoto").addEventListener("change",function(){if(this.files.length>3){alert("Puede seleccionar un máximo de 3 fotografías.");this.value="";}});
 $("rFotos").addEventListener("change",function(){if(this.files.length>6){alert("Puede seleccionar un máximo de 6 fotografías.");this.value="";}});
 $("fFotos").addEventListener("change",function(){if(this.files.length>6){alert("Puede seleccionar un máximo de 6 fotografías.");this.value="";}});
@@ -832,30 +832,25 @@ function extraerFilasPDFProyeccion(items){
   const estado=rel(380,470);
   const noRecepcion=/no\s+recepcionado/i.test(estado);
   const recepcion=/recepcionado/i.test(estado)&&!noRecepcion?"✓":"X";
-  // El PDF puede fusionar ORIGEN y DESTINO en un mismo item de texto.
-  // Tomar solo las dos columnas (x 257-319); jamás la próxima postura.
-  const origenItems=row.filter(t=>t.x>=257&&t.x<286).sort((p,q)=>p.x-q.x);
-  const destinoItems=row.filter(t=>t.x>=286&&t.x<319).sort((p,q)=>p.x-q.x);
-  let sector=origenItems.map(t=>t.text).join(" ").replace(/\s+/g," ").trim();
-  let proximo=destinoItems.map(t=>t.text).join(" ").replace(/\s+/g," ").trim();
-  const nombres=["EX RAMPA FASE 13","RAMPA CHUSCA","ROSARIO SUR","FASE 16","FASE 17","TRONCAL","UIJNA","UJINA","PUMA"];
-  // Buscar dos nombres completos en el texto unido, sin adivinar por una sola palabra.
-  const unido=(sector+" "+proximo).replace(/\s+/g," ").trim();
-  let match=null;
-  for(const origen of nombres){
-   if(!unido.toUpperCase().startsWith(origen+" "))continue;
-   const resto=unido.slice(origen.length).trim();
-   for(const destino of nombres){
-    if(resto.toUpperCase()===destino){match=[origen,destino];break}
+  // Identificar sectores por vocabulario, no por cortes arbitrarios de PDF.js.
+  // La postura se toma de los fragmentos que siguen a ambos sectores.
+  const names=["EX RAMPA FASE 13","RAMPA CHUSCA","ROSARIO SUR","FASE 16","FASE 17","TRONCAL","UIJNA","UJINA","PUMA"];
+  const tail=row.filter(t=>t.x>=257&&t.x<377).sort((p,q)=>p.x-q.x).map(t=>t.text).join(" ").replace(/\s+/g," ").trim();
+  let remaining=tail;
+  function takeSector(){
+   for(const name of names){
+    if(remaining.toUpperCase()===name||remaining.toUpperCase().startsWith(name+" ")){
+     const found=remaining.slice(0,name.length);
+     remaining=remaining.slice(name.length).trim();
+     return found;
+    }
    }
-   if(match)break;
+   return "";
   }
-  if(match){sector=match[0];proximo=match[1]}
-  else if(!proximo){
-   // Una celda sola es origen; destino no informado.
-   sector=unido;
-  }
-  found.push({equipo,pozo,metros,turnos:String(turnos),sector,proximo,recepcion,grupo:"Por definir",obs:""});
+  const sector=takeSector(),proximo=takeSector();
+  // El campo PROGRAMADO numérico está al final de la próxima postura.
+  const postura=remaining.replace(/\s+\d+(?:[.,]\d+)?\s*$/,"").trim();
+  found.push({equipo,pozo,metros,turnos:String(turnos),sector,proximo,postura,recepcion,grupo:"Por definir",obs:""});
  }
  return found;
 }
@@ -875,13 +870,13 @@ async function importarPDFCronos(){
   const selected=unique.filter(r=>r.metros>=0&&r.metros<=100).sort((a,b)=>a.metros-b.metros).slice(0,20);
   if(!selected.length){estado.textContent="No se identificaron filas compatibles de 0 a 100 metros. La tabla anterior se conserva.";return}
   limpiarFilasProyeccion();
-  selected.forEach((r,i)=>{const n=i+1;$("pEquipo"+n).value=r.equipo;$("pPozo"+n).value=r.pozo;$("pMetros"+n).value=r.metros;$("pTurnos"+n).value=r.turnos??"";$("pSector"+n).value=r.sector??"";$("pProximo"+n).value=r.proximo??"";$("pRecepcion"+n).value=r.recepcion??"X";});
+  selected.forEach((r,i)=>{const n=i+1;$("pEquipo"+n).value=r.equipo;$("pPozo"+n).value=r.pozo;$("pMetros"+n).value=r.metros;$("pTurnos"+n).value=r.turnos??"";$("pSector"+n).value=r.sector??"";$("pProximo"+n).value=r.proximo??"";$("pPostura"+n).value=r.postura??"";$("pRecepcion"+n).value=r.recepcion??"X";});
   estado.textContent=selected.length+" equipos importados. Formato detectado: "+(newer.length?"Proyección":"Cronos")+". Revise los campos antes de generar el PDF.";
   bar.style.width="100%";setStatus("Proyección importada correctamente.");
  }catch(e){console.error(e);estado.textContent="Error de lectura: "+(e.message||e)}
  finally{btn.disabled=false;setTimeout(()=>bar.style.width="0",1600)}
 }
-function limpiarFilasProyeccion(){for(let i=1;i<=20;i++){for(const p of ["pEquipo","pPozo","pMetros","pTurnos","pSector","pProximo","pObs"])$(p+i).value="";$("pRecepcion"+i).value="X";$("pGrupo"+i).value="Por definir"}}
+function limpiarFilasProyeccion(){for(let i=1;i<=20;i++){for(const p of ["pEquipo","pPozo","pMetros","pTurnos","pSector","pProximo","pPostura","pObs"])$(p+i).value="";$("pRecepcion"+i).value="X";$("pGrupo"+i).value="Por definir"}}
 function filasProyeccion(){
  const rows=[];
  for(let i=1;i<=20;i++){
@@ -889,7 +884,7 @@ function filasProyeccion(){
   if(!(equipo||pozo||metrosTxt||val("pObs"+i)))continue;
   if(!equipo||!pozo||metrosTxt===""||!Number.isFinite(Number(metrosTxt))){alert("Complete equipo, pozo y metros de la fila "+i);return null}
   const metros=Number(metrosTxt);if(metros<0||metros>100)continue;
-  rows.push({equipo,pozo,metros,turnos:val("pTurnos"+i),sector:val("pSector"+i),proximo:val("pProximo"+i),recepcion:val("pRecepcion"+i),grupo:val("pGrupo"+i),obs:val("pObs"+i)});
+  rows.push({equipo,pozo,metros,turnos:val("pTurnos"+i),sector:val("pSector"+i),proximo:val("pProximo"+i),postura:val("pPostura"+i),recepcion:val("pRecepcion"+i),grupo:val("pGrupo"+i),obs:val("pObs"+i)});
  }
  return rows.sort((a,b)=>a.metros-b.metros);
 }
@@ -905,11 +900,11 @@ async function pdfProyeccion(compartir=false){
  doc.setFontSize(8);doc.text("EQUIPOS CON 0 A 100 METROS REMANENTES",148.5,24,{align:"center"});
  doc.setFont("helvetica","normal");doc.text("Fecha: "+fecha+"  |  Equipos: "+filas.length,12,32);
  doc.autoTable({startY:37,margin:{left:9,right:9,bottom:15},theme:"grid",
- head:[["EQUIPO","POZO","METROS REM.","TURNOS REST.","ORIGEN","DESTINO","RECEPCIÓN","GRUPO RECURSOS","OBSERVACIONES"]],
- body:filas.map(f=>[f.equipo,f.pozo,fmtMetros(f.metros),f.turnos||"—",f.sector||"—",f.proximo||"—",f.recepcion,f.grupo,f.obs||"—"]),
+ head:[["EQUIPO","POZO","METROS REM.","TURNOS REST.","ORIGEN","DESTINO","PRÓXIMA POSTURA","RECEPCIÓN","GRUPO RECURSOS","OBSERVACIONES"]],
+ body:filas.map(f=>[f.equipo,f.pozo,fmtMetros(f.metros),f.turnos||"—",f.sector||"—",f.proximo||"—",f.postura||"—",f.recepcion,f.grupo,f.obs||"—"]),
  styles:{fontSize:7,cellPadding:2,overflow:"linebreak",valign:"top",lineColor:[205,218,230],lineWidth:.15},
  headStyles:{fillColor:[21,63,109],textColor:[255,255,255],fontStyle:"bold"},
- columnStyles:{0:{cellWidth:23},1:{cellWidth:30},2:{cellWidth:20},3:{cellWidth:18},4:{cellWidth:32},5:{cellWidth:32},6:{cellWidth:18,halign:"center"},7:{cellWidth:30},8:{cellWidth:76}},
+ columnStyles:{0:{cellWidth:23},1:{cellWidth:30},2:{cellWidth:20},3:{cellWidth:18},4:{cellWidth:32},5:{cellWidth:28},6:{cellWidth:36},7:{cellWidth:18,halign:"center"},8:{cellWidth:26},9:{cellWidth:49}},
  alternateRowStyles:{fillColor:[246,249,252]}});
  const total=doc.getNumberOfPages();for(let i=1;i<=total;i++){doc.setPage(i);doc.setFontSize(7);doc.setTextColor(100);doc.text("DEPARTAMENTO OPERACIONES DDH",9,203);doc.text("Página "+i+" de "+total,288,203,{align:"right"})}
  const name="PROYECCION_EQUIPOS_"+fecha+".pdf";
