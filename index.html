@@ -114,10 +114,11 @@ body{background:linear-gradient(#fff,#f6faff)!important}
 <button id="nav-traslado" onclick="showView('traslado')">Nuevo traslado</button>
 <button id="nav-srm" onclick="showView('srm')">Nuevo SRM</button>
 <button id="nav-devolucion" onclick="showView('devolucion')">Devolución de plataforma</button>
-<button id="nav-minuta" onclick="showView('minuta')">Minuta reuniones</button>
+<button data-admin-only hidden id="nav-minuta" onclick="showView('minuta')">Minuta reuniones</button>
 <button id="nav-reparacion" onclick="showView('reparacion')">Reparación / mantención camioneta</button>
 <button id="nav-flota" onclick="showView('flota')">Equipos Flota / Sondas</button>
-<button id="nav-proyeccion" onclick="showView('proyeccion')">Proyección equipos</button>
+<button data-admin-only hidden id="nav-proyeccion" onclick="showView('proyeccion')">Proyección equipos</button>
+<button data-admin-only hidden id="nav-materiales" onclick="showView('materiales')">Materiales críticos</button>
 <button id="nav-coronas" onclick="showView('coronas')">Rebaje de Coronas</button>
 <button id="nav-historial" onclick="showView('historial')">Historial</button>
 <button id="nav-config" onclick="showView('config')">Configuración de correo</button>
@@ -132,10 +133,11 @@ body{background:linear-gradient(#fff,#f6faff)!important}
 <button class="home-card" onclick="showView('traslado')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v10H3z M14 10h4l3 3v4h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg></span><strong>Traslado de equipo</strong><span>Solicitud, controles, PDF y correo.</span></button>
 <button class="home-card" onclick="showView('srm')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3l-3 4 3 4-3 4 7 6 7-6-3-4 3-4-3-4-4 3-4-3z"/><circle cx="12" cy="12" r="3"/><path d="M8 7l8 10M16 7L8 17"/></svg></span><strong>Tricono SRM</strong><span>Preparación de correo SRM.</span></button>
 <button class="home-card" onclick="showView('devolucion')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21l4-18 4 18M6 21h12M9 8h6M8 13h8M7 18h10M12 3v18"/></svg></span><strong>Devolución de plataforma</strong><span>Verificación, fotografías, PDF y correo.</span></button>
-<button class="home-card" onclick="showView('minuta')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="3"/><circle cx="4.5" cy="9" r="2"/><circle cx="19.5" cy="9" r="2"/><path d="M6 20v-3a6 6 0 0112 0v3zM1 19v-3a4 4 0 014-4M23 19v-3a4 4 0 00-4-4"/></svg></span><strong>Minuta reuniones</strong><span>Acuerdos, responsables y fechas.</span></button>
+<button data-admin-only hidden class="home-card" onclick="showView('minuta')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="3"/><circle cx="4.5" cy="9" r="2"/><circle cx="19.5" cy="9" r="2"/><path d="M6 20v-3a6 6 0 0112 0v3zM1 19v-3a4 4 0 014-4M23 19v-3a4 4 0 00-4-4"/></svg></span><strong>Minuta reuniones</strong><span>Acuerdos, responsables y fechas.</span></button>
 <button class="home-card" onclick="showView('reparacion')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h13l4 4v6H3zM16 8v4h4"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg></span><strong>Reparación / Mantención camioneta</strong><span>Solicitud, kilometraje y respaldo fotográfico.</span></button>
 <button class="home-card" onclick="showView('flota')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3a6 6 0 00-7 8L2 16l6 6 5-5a6 6 0 008-7l-4 4-5-5 4-4z"/></svg></span><strong>Equipos Flota / Sondas</strong><span>Reparación y mantención de equipos.</span></button>
-<button class="home-card" onclick="showView('proyeccion')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="13" width="4" height="8" rx="1"/><rect x="10" y="8" width="4" height="13" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/></svg></span><strong>Proyección equipos</strong><span>Metros por perforar, término proyectado y coordinación.</span></button>
+<button data-admin-only hidden class="home-card" onclick="showView('proyeccion')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="13" width="4" height="8" rx="1"/><rect x="10" y="8" width="4" height="13" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/></svg></span><strong>Proyección equipos</strong><span>Metros por perforar, término proyectado y coordinación.</span></button>
+<button data-admin-only hidden class="home-card" onclick="showView('materiales')"><span class="ico">📦</span><strong>Materiales críticos</strong><span>Inventario y solicitud de compras.</span></button>
 <button class="home-card" onclick="showView('coronas')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6h14l-2 14H7zM5 6V3h3v3m3 0V2h3v4m3 0V3h3v3M7 11h10M8 15h8M9 20h6"/></svg></span><strong>Rebaje de Coronas</strong><span>Guardar registro y preparar correo sin PDF.</span></button>
 
 
@@ -298,6 +300,26 @@ body{background:linear-gradient(#fff,#f6faff)!important}
 </div>
 </section>
 
+<section id="view-materiales" class="hidden"><div class="panel">
+<div class="module-head"><h2>Control de Materiales Críticos</h2><button class="btn btn-white" onclick="showView('home')">← Volver</button></div>
+<h3>Crear ítem y definir stock crítico</h3><div class="grid">
+<label>Tipo</label><select id="mcTipo"><option>Brocas</option><option>Barras</option><option>Sensores</option><option>Centralizadores</option><option>Otros</option></select>
+<label>Nombre</label><input id="mcNombre" placeholder="Ej.: Broca HQ">
+<label>Unidad</label><input id="mcUnidad" value="unidades">
+<label>Cantidad crítica</label><input id="mcCritico" type="number" min="0" step="any">
+<label>Stock inicial</label><input id="mcStock" type="number" min="0" step="any" value="0"></div>
+<div class="actions"><button class="btn btn-blue" onclick="crearMaterial()">Crear material</button></div>
+<h3>Ingresar inventario / modificar mínimo</h3><div class="grid">
+<label>Material</label><select id="mcSeleccion"></select>
+<label>Stock disponible</label><input id="mcNuevoStock" type="number" min="0" step="any">
+<label>Cantidad crítica</label><input id="mcNuevoCritico" type="number" min="0" step="any"></div>
+<div class="actions"><button class="btn btn-blue" onclick="actualizarMaterial()">Guardar inventario</button></div>
+<h3>Informe de materiales y solicitud al comprador</h3>
+<p class="note">Ordenado por déficit porcentual, de más a menos urgente. Marque los materiales e indique cuánto necesita solicitar.</p>
+<div id="mcTabla" style="overflow-x:auto"></div>
+<div class="grid"><label>Correo comprador</label><input id="mcComprador" type="email" placeholder="comprador@geotec.cl"></div>
+<div class="actions"><button class="btn btn-blue" onclick="solicitarMateriales()">Abrir correo de solicitud</button><button class="btn btn-white" onclick="cargarMateriales()">Actualizar informe</button></div>
+<div id="mcEstado" class="note"></div></div></section>
 <section id="view-coronas" class="hidden"><div class="panel">
 <div class="module-head"><h2>Rebaje de Coronas</h2><button class="btn btn-white" onclick="showView('home')">← Volver al menú</button></div>
 <div class="grid">
@@ -394,12 +416,17 @@ function fechaCorta(iso){if(!iso)return"";const p=iso.split("-");return p.length
 function fechaHoy(){return fechaCorta(hoyISO())}
 const EQUIPOS_CRONOS=["CH1-83", "CH1-133", "CH1-135", "CH1-140", "CH1-141", "CH1-142", "CH1-143", "CH1-154", "CH1-155", "CH1-156", "CH1-159", "CH1-160", "CH1-161", "CH1-162", "CH9-63", "CH1-120", "CH1-144", "CH1-158", "CH1-146"];
 
+function isAdmin(){return authProfile?.role==='admin'&&authProfile?.status==='approved'}
+function applyAdminVisibility(){document.querySelectorAll('[data-admin-only]').forEach(e=>e.hidden=!isAdmin())}
 function showView(v){
-const views=["home","traslado","srm","devolucion","minuta","reparacion","flota","proyeccion","coronas","historial","config"];
+if(['minuta','proyeccion','materiales'].includes(v)&&!isAdmin()){alert('Acceso exclusivo para administradores');return}
+
+const views=["home","traslado","srm","devolucion","minuta","reparacion","flota","proyeccion","materiales","coronas","historial","config"];
 views.forEach(x=>$("view-"+x)?.classList.toggle("hidden",x!==v));
-["traslado","srm","devolucion","minuta","reparacion","flota","proyeccion","coronas","historial","config"].forEach(x=>$("nav-"+x)?.classList.toggle("active",x===v));
+["traslado","srm","devolucion","minuta","reparacion","flota","proyeccion","materiales","coronas","historial","config"].forEach(x=>$("nav-"+x)?.classList.toggle("active",x===v));
 if(v==="historial")cargarHistorial();
 if(v==="coronas")cargarCoronas();
+if(v==="materiales")cargarMateriales();
 window.scrollTo({top:0,behavior:"smooth"});
 }
 function init(){
@@ -1185,6 +1212,55 @@ setStatus(fotoFiles.length?`PDF de devolución generado con ${fotoFiles.length} 
 }
 
 
+
+let materialesCache=[];
+async function mcRequest(path="",opts={}){
+ const r=await fetch(AUTH_PROJECT_URL+"/rest/v1/materiales_criticos"+path,{...opts,headers:{"Authorization":"Bearer "+await validToken(),"apikey":AUTH_PUBLIC_KEY,"Content-Type":"application/json","Accept":"application/json",...(opts.headers||{})}});
+ if(!r.ok)throw new Error("Supabase "+r.status+": "+await r.text());
+ if(r.status===204||opts.headers?.Prefer==="return=minimal")return null;
+ return await r.json();
+}
+function mcEstado(t){$("mcEstado").textContent=t}
+function mcOrden(a,b){const d=x=>Number(x.cantidad_critica)>0?Math.max(0,(x.cantidad_critica-x.stock)/x.cantidad_critica):0;return d(b)-d(a)||String(a.tipo).localeCompare(String(b.tipo))||String(a.nombre).localeCompare(String(b.nombre))}
+async function cargarMateriales(){
+ if(!isAdmin())return;
+ try{
+ materialesCache=await mcRequest("?select=*&order=tipo.asc,nombre.asc");
+ const sel=$("mcSeleccion");
+ sel.innerHTML='<option value="">Seleccione material</option>'+materialesCache.map(m=>'<option value="'+m.id+'">'+esc(m.tipo+" / "+m.nombre)+'</option>').join("");
+ sel.onchange=()=>{const m=materialesCache.find(x=>String(x.id)===sel.value);$("mcNuevoStock").value=m?.stock??"";$("mcNuevoCritico").value=m?.cantidad_critica??""};
+ let last="",html='<table style="width:100%;border-collapse:collapse"><thead><tr><th>Elegir</th><th>Material</th><th>Crítico</th><th>Stock</th><th>Diferencia</th><th>Déficit</th><th>Cantidad a pedir</th></tr></thead><tbody>';
+ for(const m of [...materialesCache].sort(mcOrden)){
+ if(m.tipo!==last){last=m.tipo;html+='<tr><th colspan="7" style="text-align:left;background:#eaf2fb;padding:9px">'+esc(last)+'</th></tr>'}
+ const dif=Number(m.stock)-Number(m.cantidad_critica),pct=Number(m.cantidad_critica)>0?Math.max(0,-dif/Number(m.cantidad_critica)*100):0;
+ const color=pct>=50?"#fce0e0":pct>0?"#fff1cf":"#e0f4e7";
+ html+='<tr style="background:'+color+'"><td><input type="checkbox" class="mcCheck" data-id="'+m.id+'"></td><td>'+esc(m.nombre)+' ('+esc(m.unidad)+')</td><td>'+m.cantidad_critica+'</td><td>'+m.stock+'</td><td>'+dif+'</td><td>'+pct.toFixed(1)+'%</td><td><input class="mcPedido" data-id="'+m.id+'" type="number" min="0.01" step="any" value="'+Math.max(0,-dif)+'" style="width:85px"></td></tr>';
+ }
+ $("mcTabla").innerHTML=html+'</tbody></table>';mcEstado(materialesCache.length+" materiales registrados.");
+ }catch(e){mcEstado("Error al consultar materiales: "+e.message)}
+}
+async function crearMaterial(){
+ if(!isAdmin())return;
+ const tipo=val("mcTipo"),nombre=val("mcNombre"),unidad=val("mcUnidad")||"unidades",cantidad_critica=Number(val("mcCritico")),stock=Number(val("mcStock"));
+ if(!nombre||val("mcCritico")===""||val("mcStock")===""||![cantidad_critica,stock].every(Number.isFinite)||cantidad_critica<0||stock<0)return alert("Complete nombre, cantidad crítica y stock válidos.");
+ try{await mcRequest("",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({tipo,nombre,unidad,cantidad_critica,stock})});$("mcNombre").value="";await cargarMateriales();mcEstado("Material creado.")}catch(e){mcEstado("No se pudo crear: "+e.message)}
+}
+async function actualizarMaterial(){
+ if(!isAdmin())return;
+ const id=val("mcSeleccion"),stock=Number(val("mcNuevoStock")),cantidad_critica=Number(val("mcNuevoCritico"));
+ if(!id||val("mcNuevoStock")===""||val("mcNuevoCritico")===""||!Number.isFinite(stock)||!Number.isFinite(cantidad_critica)||stock<0||cantidad_critica<0)return alert("Seleccione material e ingrese valores válidos.");
+ try{await mcRequest("?id=eq."+encodeURIComponent(id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({stock,cantidad_critica,actualizado_en:new Date().toISOString()})});await cargarMateriales();mcEstado("Inventario actualizado.")}catch(e){mcEstado("No se pudo actualizar: "+e.message)}
+}
+function solicitarMateriales(){
+ if(!isAdmin())return;
+ const items=[...document.querySelectorAll(".mcCheck:checked")].map(c=>{const m=materialesCache.find(x=>String(x.id)===c.dataset.id);const n=Number(document.querySelector('.mcPedido[data-id="'+c.dataset.id+'"]').value);return {m,n}}).filter(x=>x.m);
+ if(!items.length)return alert("Marque al menos un material.");
+ if(items.some(x=>!Number.isFinite(x.n)||x.n<=0))return alert("Indique cantidades mayores a cero.");
+ const comprador=val("mcComprador");if(!comprador||!/^\S+@\S+\.\S+$/.test(comprador))return alert("Ingrese el correo del comprador.");
+ const body="Estimados:\n\nSolicito gestionar la compra de los siguientes materiales críticos:\n\n"+items.map((x,i)=>(i+1)+". "+x.m.tipo+" / "+x.m.nombre+"\nCantidad solicitada: "+x.n+" "+x.m.unidad+"\nStock actual: "+x.m.stock+" | Cantidad crítica: "+x.m.cantidad_critica).join("\n\n")+"\n\nFavor confirmar disponibilidad y plazo de entrega.\n\nSaludos.";
+ window.location.href="mailto:"+encodeURIComponent(comprador)+"?subject="+encodeURIComponent("SOLICITUD DE COMPRA - MATERIALES CRÍTICOS")+"&body="+encodeURIComponent(body);
+}
+
 // Rebaje de Coronas: tabla y permisos independientes del historial general.
 const CORONAS_API=AUTH_PROJECT_URL+"/rest/v1/rebajas_coronas";
 let coronasCache=[];
@@ -1252,7 +1328,7 @@ async function profileFetch(){
  const r=await fetch(AUTH_PROJECT_URL+'/rest/v1/ddh_profiles?select=id,email,role,status&id=eq.'+encodeURIComponent(authSession.user.id),{headers:{'apikey':AUTH_PUBLIC_KEY,'Authorization':'Bearer '+await validToken()}});
  if(!r.ok)throw new Error('No se pudo verificar el estado de autorización.');const rows=await r.json();return rows[0]||null;
 }
-function lockApp(message=''){$('appShell').hidden=true;$('authScreen').hidden=false;$('adminPanel').hidden=true;$('adminToggle').hidden=true;authProfile=null;authMessage(message)}
+function lockApp(message=''){$('appShell').hidden=true;$('authScreen').hidden=false;$('adminPanel').hidden=true;$('adminToggle').hidden=true;authProfile=null;applyAdminVisibility();authMessage(message)}
 async function enterApp(){
  if(!authSession?.access_token)return lockApp();
  try{
@@ -1261,7 +1337,7 @@ async function enterApp(){
  authSession.user=user;authProfile=await profileFetch();
  if(!authProfile||authProfile.status!=='approved')return lockApp(authProfile?.status==='disabled'?'Tu cuenta está desactivada. Contacta al administrador.':'Cuenta pendiente de aprobación del administrador.');
  $('authScreen').hidden=true;$('appShell').hidden=false;$('sessionEmail').textContent=user.email;
- $('adminToggle').hidden=authProfile.role!=='admin';
+ $('adminToggle').hidden=authProfile.role!=='admin';applyAdminVisibility();
  }catch(e){lockApp('No se pudo validar tu acceso: '+e.message)}
 }
 async function login(ev){ev.preventDefault();try{if(!corporate(authEmail()))throw new Error('Utiliza tu correo @geotec.cl.');authMessage('Verificando acceso…');const s=await authRequest('/token?grant_type=password','POST',{email:authEmail(),password:$('authPassword').value});storeSession(s);$('authPassword').value='';await enterApp()}catch(e){authMessage(e.message)}}
