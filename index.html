@@ -923,8 +923,8 @@ async function importarPDFCronos(){
   const old=extraerFilasPDFCronos(content.items).rows;
   const rows=resumen.length?resumen:newer.length?newer:old;
   const unique=[...new Map(rows.map(r=>[r.equipo+"|"+r.pozo,r])).values()];
-  const selected=unique.filter(r=>r.metros>=0&&(resumen.length||r.metros<=100)).sort((a,b)=>a.metros-b.metros).slice(0,20);
-  if(!selected.length){estado.textContent="No se identificaron filas compatibles. La tabla anterior se conserva.";return}
+  const selected=unique.filter(r=>r.metros>=0&&r.metros<100).sort((a,b)=>a.metros-b.metros).slice(0,20);
+  if(!selected.length){estado.textContent="No se identificaron equipos con menos de 100 metros remanentes. La tabla anterior se conserva.";return}
   limpiarFilasProyeccion();
   selected.forEach((r,i)=>{const n=i+1;$("pEquipo"+n).value=r.equipo;$("pPozo"+n).value=r.pozo;$("pMetros"+n).value=r.metros;$("pTurnos"+n).value=r.turnos??"";$("pSector"+n).value=r.sector??"";$("pProximo"+n).value=r.proximo??"";$("pPostura"+n).value=r.postura??"";$("pRecepcion"+n).value=r.recepcion??"X";});
   estado.textContent=selected.length+" equipos importados. Formato detectado: "+(resumen.length?"Proyección operacional":newer.length?"Proyección":"Cronos")+". Revise los campos antes de generar el PDF.";
