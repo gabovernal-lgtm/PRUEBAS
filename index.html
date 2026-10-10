@@ -294,7 +294,7 @@ body{background:linear-gradient(#fff,#f6faff)!important}
 <div class="module-head"><h2>Proyección equipos</h2><button class="btn btn-white" onclick="showView('home')">← Volver al menú</button></div>
 <div class="note" style="margin-bottom:12px">Complete manualmente o importe un PDF de Cronos o Proyección (incluido el formato Equipo / Pozo / Remanente / Origen / Destino / Plataforma recepcionada). Revise los datos antes de generar el reporte.</div>
 <div class="ocr-box"><div class="ocr-title">IMPORTAR PDF CRONOS O PROYECCIÓN · PRIMERA PÁGINA</div><div class="ocr-row"><input id="pCronosPDF" type="file" accept="application/pdf,.pdf"><button class="btn btn-blue" id="btnImportarPDF" onclick="importarPDFCronos()">Importar PDF</button></div><div id="ocrEstado" class="note" style="margin-top:8px">Seleccione un PDF original de Cronos o Proyección con texto seleccionable. El archivo se lee en su navegador.</div><div class="ocr-progress"><div id="ocrBar"></div></div></div>
-<div class="projection-wrap"><table class="projection-table" style="min-width:1450px"><thead><tr><th class="num">N°</th><th>Equipo</th><th>Pozo</th><th>Metros remanentes</th><th>Turnos restantes</th><th>Origen</th><th>Destino</th><th>Próxima postura</th><th>Recepción plataforma</th><th>Grupo de recursos</th><th style="min-width:270px">Observaciones</th></tr></thead><tbody id="proyeccionRows"></tbody></table></div>
+<div class="projection-wrap"><table class="projection-table" style="min-width:1150px"><thead><tr><th class="num">N°</th><th>Equipo</th><th>Pozo</th><th>Metros remanentes</th><th>Origen</th><th>Destino</th><th>Recepción plataforma</th><th>Grupo de recursos</th><th style="min-width:270px">Observaciones</th></tr></thead><tbody id="proyeccionRows"></tbody></table></div>
 <h3 class="section-title">Equipos para coordinación</h3><textarea id="pCoordinacion" class="table-input" style="min-height:95px" placeholder="Ingrese equipos y detalle para coordinación"></textarea>
 
 <div class="actions"><button class="btn btn-light" onclick="pdfProyeccion()">Generar PDF</button><button class="btn btn-blue" onclick="correoProyeccion()">Abrir correo para revisar</button><button class="btn btn-white" onclick="limpiarProyeccion()">Limpiar</button></div><small class="warn">Genera primero el PDF y luego adjúntalo manualmente al correo preparado por la aplicación.</small>
@@ -452,7 +452,7 @@ $("cParaFlota").value=localStorage.getItem("ddh_para_flota")||"";
 $("cCCFlota").value=localStorage.getItem("ddh_cc_flota")||"";
 $("devRows").innerHTML=preguntas.map((q,i)=>`<tr><td class="n">${i+1}</td><td>${esc(q)}</td><td><select class="table-input" id="dCumple${i+1}"><option></option><option${i<5?" selected":""}>Sí</option><option>No</option><option${i===5?" selected":""}>N/A</option></select></td><td><input class="table-input" id="dObs${i+1}"></td></tr>`).join("");
 $("minutaRows").innerHTML=Array.from({length:20},(_,i)=>`<tr><td class="n">${i+1}</td><td><input class="table-input" id="mComp${i+1}" placeholder="Compromiso o acuerdo"></td><td><input class="table-input" id="mResp${i+1}" placeholder="Responsable"></td><td><input class="table-input" id="mFecha${i+1}" type="date"></td></tr>`).join("");
-$("proyeccionRows").innerHTML=Array.from({length:20},(_,i)=>`<tr><td class="num">${i+1}</td><td><select id="pEquipo${i+1}" class="table-input"><option value="">Seleccione equipo</option>${EQUIPOS_CRONOS.map(e=>`<option value="${e}">${e}</option>`).join("")}</select></td><td><input id="pPozo${i+1}" placeholder="Pozo"></td><td><input id="pMetros${i+1}" type="number" min="0" step="0.01" placeholder="0"></td><td><input id="pTurnos${i+1}" type="number" min="0" step="1" placeholder="—"></td><td><input id="pSector${i+1}" placeholder="Origen"></td><td><input id="pProximo${i+1}" placeholder="Destino"></td><td><input id="pPostura${i+1}" placeholder="Próxima postura"></td><td><select id="pRecepcion${i+1}" class="table-input"><option value="X">X</option><option value="✓">✓</option></select></td><td><select id="pGrupo${i+1}" class="table-input"><option>Por definir</option><option>Grupo 1</option><option>Grupo 2</option><option>Grupo 3</option></select></td><td><textarea id="pObs${i+1}" class="table-input" rows="3" style="min-width:250px;resize:vertical" placeholder="Observaciones extensas"></textarea></td></tr>`).join("");
+$("proyeccionRows").innerHTML=Array.from({length:20},(_,i)=>`<tr><td class="num">${i+1}</td><td><select id="pEquipo${i+1}" class="table-input"><option value="">Seleccione equipo</option>${EQUIPOS_CRONOS.map(e=>`<option value="${e}">${e}</option>`).join("")}</select></td><td><input id="pPozo${i+1}" placeholder="Pozo"></td><td><input id="pMetros${i+1}" type="number" min="0" step="0.01" placeholder="0"></td><input id="pTurnos${i+1}" type="hidden"><td><input id="pSector${i+1}" placeholder="Origen"></td><td><input id="pProximo${i+1}" placeholder="Destino"></td><input id="pPostura${i+1}" type="hidden"><td><select id="pRecepcion${i+1}" class="table-input"><option value="X">X</option><option value="✓">✓</option></select></td><td><select id="pGrupo${i+1}" class="table-input"><option>Por definir</option><option>Grupo 1</option><option>Grupo 2</option><option>Grupo 3</option></select></td><td><textarea id="pObs${i+1}" class="table-input" rows="3" style="min-width:250px;resize:vertical" placeholder="Observaciones extensas"></textarea></td></tr>`).join("");
 $("dFoto").addEventListener("change",function(){if(this.files.length>3){alert("Puede seleccionar un máximo de 3 fotografías.");this.value="";}});
 $("rFotos").addEventListener("change",function(){if(this.files.length>6){alert("Puede seleccionar un máximo de 6 fotografías.");this.value="";}});
 $("fFotos").addEventListener("change",function(){if(this.files.length>6){alert("Puede seleccionar un máximo de 6 fotografías.");this.value="";}});
@@ -845,18 +845,27 @@ function extraerFilasPDFCronos(items){
 }
 
 function extraerFilasPDFResumenOperacional(items){
- const tokens=items.map(i=>({text:String(i.str||"").trim(),x:Number(i.transform?.[4]),y:Number(i.transform?.[5])})).filter(t=>t.text&&Number.isFinite(t.x)&&Number.isFinite(t.y));
- const anchors=tokens.filter(t=>/^CH\s*[19]\s*[-–]?\s*\d{2,3}$/i.test(t.text)&&t.x>=48&&t.x<100);
- const found=[];
+ // Reconstrucción por filas y columnas del PDF operacional (15 equipos).
+ // PDF.js puede fragmentar texto y desplazar ligeramente las coordenadas Y.
+ const ts=items.map(i=>({text:String(i.str||"").trim(),x:Number(i.transform?.[4]),y:Number(i.transform?.[5])})).filter(t=>t.text&&Number.isFinite(t.x)&&Number.isFinite(t.y));
+ const anchors=ts.filter(t=>/\bCH\s*[19]\s*[-–]?\s*\d{2,3}\b/i.test(t.text));
+ const found=[],seen=new Set();
  for(const a of anchors){
-  const row=tokens.filter(t=>Math.abs(t.y-a.y)<2.3).sort((p,q)=>p.x-q.x);
+  const match=a.text.match(/CH\s*[19]\s*[-–]?\s*\d{2,3}/i);if(!match)continue;
+  const equipo=match[0].toUpperCase().replace(/\s/g,"").replace("–","-").replace(/^CH([19])(\d)/,"CH$1-$2");
+  const row=ts.filter(t=>Math.abs(t.y-a.y)<3.35).sort((p,q)=>p.x-q.x);
   const col=(lo,hi)=>row.filter(t=>t.x>=lo&&t.x<hi).map(t=>t.text).join(" ").replace(/\s+/g," ").trim();
-  const equipo=a.text.toUpperCase().replace(/\s/g,"").replace("–","-").replace(/^CH([19])(\d)/,"CH$1-$2");
-  const pozo=col(107,167),mtxt=col(168,202),sector=col(202,254),proximo=col(254,340);
-  const metros=numeroOCR(mtxt);
+  const all=row.map(t=>t.text).join(" ").replace(/\s+/g," ");
+  let pozo=col(105,167).match(/(?:DDH|DER|AR|PDR|PDU)\s*[-–]?\s*\d+(?:\s*[A-Z])?/i)?.[0]||"";
+  if(!pozo)pozo=all.match(/(?:DDH|DER|AR|PDR|PDU)\s*[-–]?\s*\d+(?:\s*[A-Z])?/i)?.[0]||"";
+  const numTokens=row.filter(t=>t.x>=164&&t.x<204).map(t=>t.text).join(" ");
+  let metros=numeroOCR(numTokens);
+  if(metros===null){const rest=all.slice(all.indexOf(pozo)+pozo.length);metros=numeroOCR(rest.match(/^\s*([\d]+(?:[.,]\d+)?)/)?.[1]||"")}
   if(!pozo||metros===null||metros<0)continue;
-  const estado=col(380,505);
-  const recepcion=/\bno\s+recepcionad[oa]\b/i.test(estado)?"X":/recepcionad[oa]/i.test(estado)?"✓":"X";
+  const sector=col(202,255),proximo=col(255,340);
+  const estado=col(385,550);
+  const recepcion=/no\s+recepcionad[oa]/i.test(estado)?"X":/recepcionad[oa]/i.test(estado)?"✓":"X";
+  const key=equipo+"|"+pozo;if(seen.has(key))continue;seen.add(key);
   found.push({equipo,pozo,metros,sector,proximo,recepcion,grupo:"Por definir",obs:""});
  }
  return found;
