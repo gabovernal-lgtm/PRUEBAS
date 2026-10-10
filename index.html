@@ -99,6 +99,7 @@ body{background:linear-gradient(#fff,#f6faff)!important}
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 <section id="authScreen"><div class="auth-card"><h2>OPERACIONES DDH</h2><p>Acceso de personal Geotec autorizado</p>
@@ -314,6 +315,8 @@ body{background:linear-gradient(#fff,#f6faff)!important}
 <label>Stock disponible</label><input id="mcNuevoStock" type="number" min="0" step="any">
 <label>Cantidad crítica</label><input id="mcNuevoCritico" type="number" min="0" step="any"></div>
 <div class="actions"><button class="btn btn-blue" onclick="actualizarMaterial()">Guardar inventario</button></div>
+<h3>Movimiento de bodega</h3><div class="grid"><label>Material</label><select id="mcMovItem"></select><label>Operación</label><select id="mcMovTipo"><option value="salida">Retirar de bodega</option><option value="entrada">Ingresar unidades</option></select><label>Cantidad</label><input id="mcMovCantidad" type="number" min="0.01" step="any"><label>Observación / destino</label><input id="mcMovObs" placeholder="Ej.: Entregado a equipo 159"></div><div class="actions"><button class="btn btn-blue" onclick="registrarMovimientoMaterial()">Registrar movimiento</button></div>
+<h3>Importar inventario desde Excel</h3><p class="note">El Excel actualiza el stock de materiales existentes, sin cambiar los mínimos críticos. Primero revise las coincidencias y luego confirme.</p><input type="file" id="mcExcel" accept=".xlsx,.xls"><div class="actions"><button class="btn btn-white" onclick="previsualizarInventario()">Revisar Excel</button><button class="btn btn-blue" id="mcConfirmarExcel" disabled onclick="confirmarInventarioExcel()">Confirmar actualización</button></div><div id="mcExcelVista" style="overflow-x:auto"></div>
 <h3>Informe de materiales y solicitud al comprador</h3>
 <p class="note">Ordenado por déficit porcentual, de más a menos urgente. Marque los materiales e indique cuánto necesita solicitar.</p>
 <div id="mcTabla" style="overflow-x:auto"></div>
@@ -1213,6 +1216,61 @@ setStatus(fotoFiles.length?`PDF de devolución generado con ${fotoFiles.length} 
 
 
 
+
+async function registrarMovimientoMaterial(){
+ if(!isAdmin())return;
+ const p_material_id=Number(val("mcMovItem")),p_tipo=val("mcMovTipo"),p_cantidad=Number(val("mcMovCantidad")),p_observacion=val("mcMovObs");
+ if(!p_material_id||!Number.isFinite(p_cantidad)||p_cantidad<=0)return alert("Seleccione material y cantidad válida.");
+ try{const r=await fetch(AUTH_PROJECT_URL+"/rest/v1/rpc/registrar_movimiento_material",{method:"POST",headers:{"Authorization":"Bearer "+await validToken(),"apikey":AUTH_PUBLIC_KEY,"Content-Type":"application/json"},body:JSON.stringify({p_material_id,p_tipo,p_cantidad,p_observacion})});if(!r.ok)throw new Error(await r.text());await cargarMateriales();mcEstado("Movimiento registrado. Nuevo stock: "+await r.json());$("mcMovCantidad").value="";$("mcMovObs").value=""}catch(e){mcEstado("No se pudo registrar movimiento: "+e.message)}
+}
+let mcImportPreview=[];
+function mcNormalize(x){return String(x??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/[^A-Z0-9]/g,"")}
+function mcCellNum(x){if(typeof x==="number")return x;const t=String(x??"").trim().replace(/\s/g,"").replace(/\./g,"").replace(",",".");return t!==""&&Number.isFinite(Number(t))?Number(t):null}
+async function previsualizarInventario(){
+ const file=$("mcExcel").files?.[0];if(!file)return alert("Seleccione un archivo Excel.");
+ if(!window.XLSX)return alert("No se cargó el lector Excel. Recargue la página.");
+ try{
+ const wb=XLSX.read(await file.arrayBuffer(),{type:"array"});mcImportPreview=[];let missing=[];
+ for(const sheet of wb.SheetNames){
+ const rows=XLSX.utils.sheet_to_json(wb.Sheets[sheet],{header:1,defval:""});
+ let headers=-1,nameCol=-1,stockCol=-1;
+ for(let i=0;i<Math.min(rows.length,25);i++){
+ const cells=rows[i].map(mcNormalize);
+ const nc=cells.findIndex(x=>/DESCRIPCION|MATERIAL|PRODUCTO|DETALLE|NOMBRE/.test(x));
+ const sc=cells.findIndex(x=>/SALDO|STOCKACTUAL|EXISTENCIA|CANTIDADDISPONIBLE|STOCK/.test(x)&&!/CRITIC|MINIM/.test(x));
+ if(nc>=0&&sc>=0){headers=i;nameCol=nc;stockCol=sc;break}
+ }
+ if(headers<0){missing.push(sheet+": sin encabezados reconocibles");continue}
+ for(let i=headers+1;i<rows.length;i++){
+ const name=String(rows[i][nameCol]??"").trim(),stock=mcCellNum(rows[i][stockCol]);
+ if(!name||stock===null||stock<0)continue;
+ const matches=materialesCache.filter(m=>mcNormalize(m.nombre)===mcNormalize(name));
+ mcImportPreview.push({sheet,row:i+1,name,stock,match:matches.length===1?matches[0]:null,status:matches.length===1?"Coincide":matches.length>1?"Ambiguo":"No registrado"});
+ }
+ }
+ let html='<table><tr><th>Hoja</th><th>Material Excel</th><th>Stock nuevo</th><th>Coincidencia</th></tr>';
+ for(const x of mcImportPreview)html+='<tr><td>'+esc(x.sheet)+'</td><td>'+esc(x.name)+'</td><td>'+x.stock+'</td><td>'+esc(x.match?x.match.nombre:x.status)+'</td></tr>';
+ $("mcExcelVista").innerHTML=html+'</table>'+(missing.length?'<p>'+esc(missing.join("; "))+'</p>':'');
+ $("mcConfirmarExcel").disabled=!mcImportPreview.some(x=>x.match);
+ mcEstado("Coincidencias: "+mcImportPreview.filter(x=>x.match).length+". Sin coincidencia: "+mcImportPreview.filter(x=>!x.match).length+". Revise antes de confirmar.");
+ }catch(e){mcEstado("Error leyendo Excel: "+e.message)}
+}
+async function confirmarInventarioExcel(){
+ if(!isAdmin())return;
+ const good=mcImportPreview.filter(x=>x.match);
+ const ids=good.map(x=>x.match.id);
+ if(new Set(ids).size!==ids.length)return alert("Un material aparece varias veces en el Excel. Revise antes de importar.");
+ if(!good.length)return alert("No hay coincidencias.");
+ if(!confirm("Actualizar stock de "+good.length+" materiales? No se modificarán los mínimos críticos."))return;
+ let ok=0,errors=[];
+ for(const x of good){try{
+ await mcRequest("?id=eq."+x.match.id,{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({stock:x.stock,actualizado_en:new Date().toISOString()})});
+ ok++;
+ }catch(e){errors.push(x.name+": "+e.message)}}
+ mcImportPreview=[];$("mcConfirmarExcel").disabled=true;await cargarMateriales();
+ mcEstado("Inventario actualizado: "+ok+" materiales. "+(errors.length?"Errores: "+errors.join("; "):"")+" No se modificó el stock crítico.");
+}
+
 let materialesCache=[];
 async function mcRequest(path="",opts={}){
  const r=await fetch(AUTH_PROJECT_URL+"/rest/v1/materiales_criticos"+path,{...opts,headers:{"Authorization":"Bearer "+await validToken(),"apikey":AUTH_PUBLIC_KEY,"Content-Type":"application/json","Accept":"application/json",...(opts.headers||{})}});
@@ -1227,6 +1285,7 @@ async function cargarMateriales(){
  try{
  materialesCache=await mcRequest("?select=*&order=tipo.asc,nombre.asc");
  const sel=$("mcSeleccion");
+ const mov=$("mcMovItem");mov.innerHTML='<option value="">Seleccione material</option>'+materialesCache.map(m=>'<option value="'+m.id+'">'+esc(m.tipo+" / "+m.nombre)+'</option>').join("");
  sel.innerHTML='<option value="">Seleccione material</option>'+materialesCache.map(m=>'<option value="'+m.id+'">'+esc(m.tipo+" / "+m.nombre)+'</option>').join("");
  sel.onchange=()=>{const m=materialesCache.find(x=>String(x.id)===sel.value);$("mcNuevoStock").value=m?.stock??"";$("mcNuevoCritico").value=m?.cantidad_critica??""};
  let last="",html='<table style="width:100%;border-collapse:collapse"><thead><tr><th>Elegir</th><th>Material</th><th>Crítico</th><th>Stock</th><th>Diferencia</th><th>Déficit</th><th>Cantidad a pedir</th></tr></thead><tbody>';
