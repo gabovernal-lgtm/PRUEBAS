@@ -990,10 +990,23 @@ async function pdfProyeccion(compartir=false){
  doc.save(name);setStatus("PDF de proyección generado.");
 }
 async function correoProyeccion(){
- const filas=filasProyeccion();if(filas===null)return;if(!filas.length){alert("No hay equipos para enviar.");return}
+ const filas=filasProyeccion();if(filas===null)return;
+ if(!filas.length){alert("No hay equipos para enviar.");return}
  const fecha=fechaHoy();
- mailto("Reporte diario de avance equipos DDH + RC ("+fecha+")","Estimados:\\n\\nAdjunto reporte de proyección de equipos.\\n\\nSaludos,\\nDEPARTAMENTO OPERACIONES DDH");
- setStatus("Correo preparado. Adjunte el PDF generado.");
+ const coordinacion=val("pCoordinacion").trim();
+ const cuerpo=[
+  "Estimados:",
+  "",
+  "Junto con saludar, adjunto la planificación a corto plazo de equipos DDH + RC, correspondiente al "+fecha+".",
+  "",
+  "EQUIPOS PARA COORDINACIÓN",
+  coordinacion||"Sin equipos adicionales para coordinación.",
+  "",
+  "Saludos,",
+  "DEPARTAMENTO OPERACIONES DDH"
+ ].join("\n");
+ mailto("Proyección a corto plazo equipos DDH + RC ("+fecha+")",cuerpo);
+ setStatus("Correo preparado con el mismo detalle de coordinación del PDF. Adjunte el PDF generado.");
 }
 function limpiarProyeccion(){limpiarFilasProyeccion();$("pCoordinacion").value="";setStatus("Proyección equipos limpiada.")}
 
