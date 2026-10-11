@@ -345,7 +345,7 @@ body{background:linear-gradient(#fff,#f6faff)!important}
 <div class="module-head"><h2>Historial de operaciones</h2><button class="btn btn-white" onclick="showView('home')">← Volver al menú</button></div>
 <div class="toolbar">
 <button class="btn btn-light" onclick="cargarHistorial()">Actualizar historial</button>
-<select id="hTipo" onchange="renderHistorial()"><option value="">Todos los tipos</option><option>TRASLADO</option><option>SRM</option><option>DEVOLUCIÓN</option><option>MINUTA</option><option>REPARACIÓN / MANTENCIÓN CAMIONETA</option><option>EQUIPOS FLOTA / SONDAS</option><option>PROYECCIÓN EQUIPOS</option></select>
+<select id="hTipo" onchange="renderHistorial()"><option value="">Todos los tipos</option><option>TRASLADO</option><option>SRM</option><option>DEVOLUCIÓN</option><option>MINUTA</option><option>REPARACIÓN / MANTENCIÓN CAMIONETA</option><option>EQUIPOS FLOTA / SONDAS</option></select>
 <select id="hEquipo" onchange="renderHistorial()"><option value="">Todos los equipos</option></select>
 <input id="hBuscar" placeholder="Buscar pozo, supervisor, sector..." oninput="renderHistorial()" style="min-width:240px">
 <label>Desde <input id="hDesde" type="date" onchange="renderHistorial()"></label>
@@ -712,7 +712,7 @@ try{
   if(lote.length<tam)break;
   if(offset>=20000){$("historialEstado").textContent="Se cargaron los primeros 20.000 registros. Acota el período para un reporte más extenso.";break;}
  }
- historialCache=todos;actualizarEquiposHistorial();renderHistorial();
+ historialCache=todos.filter(o=>o.tipo!=="PROYECCIÓN EQUIPOS");actualizarEquiposHistorial();renderHistorial();
 }catch(e){console.error(e);$("historialEstado").textContent="No fue posible conectar con Supabase. Revisa la configuración y tus permisos.";$("historialTabla").innerHTML=""}
 }
 function actualizarEquiposHistorial(){
@@ -974,17 +974,6 @@ function filasProyeccion(){
  return rows.sort((a,b)=>a.metros-b.metros);
 }
 function fmtMetros(n){return new Intl.NumberFormat("es-CL",{maximumFractionDigits:2}).format(n)}
-async function guardarProyeccion(filas){
- if(!isAdmin())return false;
- const fecha=fechaHoy(),coordinacion=val("pCoordinacion");
- for(const f of filas){
-  if(!(await guardarOnline({tipo:"PROYECCIÓN EQUIPOS",fecha,equipo:f.equipo,pozo:f.pozo,
-   sector_origen:f.sector,sector_destino:f.proximo,detalle:f.metros+" m | "+f.grupo+" | "+f.obs,
-   estado:"Proyección preparada",identificador:identificador("PROYECCIÓN EQUIPOS",fecha,f.equipo,f.pozo),
-   datos:{...f,coordinacion}})))return false;
- }
- return true;
-}
 async function pdfProyeccion(compartir=false){
  const filas=filasProyeccion();if(filas===null)return;
  if(!filas.length){alert("Ingrese o importe al menos un equipo.");return}
@@ -1026,9 +1015,8 @@ async function pdfProyeccion(compartir=false){
  }
  const total=doc.getNumberOfPages();for(let i=1;i<=total;i++){doc.setPage(i);doc.setFontSize(7);doc.setTextColor(100);doc.text("DEPARTAMENTO OPERACIONES DDH",9,203);doc.text("Página "+i+" de "+total,288,203,{align:"right"})}
  const name="PROYECCION_EQUIPOS_"+fecha+".pdf";
- if(!(await guardarProyeccion(filas)))return;
  if(compartir&&navigator.share&&navigator.canShare){const file=new File([doc.output("blob")],name,{type:"application/pdf"});if(navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:"Proyección de equipos"});return}catch(e){if(e.name==="AbortError")return}}}
- doc.save(name);setStatus("PDF de proyección generado y datos guardados en historial.");
+ doc.save(name);setStatus("PDF de proyección generado.");
 }
 async function correoProyeccion(){
  const filas=filasProyeccion();if(filas===null)return;
@@ -1046,7 +1034,6 @@ async function correoProyeccion(){
   "Saludos,",
   "DEPARTAMENTO OPERACIONES DDH"
  ].join("\n");
- if(!(await guardarProyeccion(filas)))return;
  mailto("Proyección a corto plazo equipos DDH + RC ("+fecha+")",cuerpo);
  setStatus("Correo preparado con el mismo detalle de coordinación del PDF. Adjunte el PDF generado.");
 }

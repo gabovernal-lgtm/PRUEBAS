@@ -1,7 +1,7 @@
 # Cambios de PRUEBAS — 11 octubre 2026
 
 - Historial: inserta versiones por contenido, evita duplicados idénticos y detiene el correo si falla el guardado. No requiere ampliar permisos de historial ni sobrescribe registros anteriores.
-- Proyección: PDF y correo guardan una fila por equipo; visible y exportable desde Historial.
+- Proyección: por solicitud del usuario, solo genera PDF y prepara correo. No guarda registros nuevos ni aparece en Historial. No se borran registros históricos de Supabase.
 - Inventario: ajustes manuales e importaciones usan ddh_pruebas_ajustar_inventario. Actualización y movimiento en una sola transacción; detecta inventario cambiado desde la revisión. Importaciones conservan mínimos críticos.
 - Correos: preferencias por usuario en ddh_pruebas_correo_config, protegidas por RLS. Se cargan al iniciar sesión en PRUEBAS desde otro dispositivo; Guardar configuración sincroniza.
 

@@ -22,10 +22,7 @@ run("authSession={user:{id:'test-user',email:'test@geotec.cl'},access_token:'tok
  node('sPozo').value='DDH-1';node('sEquipo').value='CH1-159';node('sFondo').value='100';
  await run('correoSRM()');assert.equal(context.window.location.href,'','no mail on failed save');assert(alerts.length);
  responder=()=>new Response(null,{status:201});
- context.rows=[{equipo:'CH1-159',pozo:'DDH-1',metros:10,sector:'A',proximo:'B',grupo:'Grupo 1',recepcion:'✓',obs:'Prueba'}];
- node('pCoordinacion').value='Coordinar camión';
- assert.equal(await run('guardarProyeccion(rows)'),true);
- const proj=JSON.parse(requests.at(-1).opts.body);assert.equal(proj.tipo,'PROYECCIÓN EQUIPOS');assert.equal(proj.datos.coordinacion,'Coordinar camión');
+ assert(!code.includes("guardarProyeccion"),"projection PDF and mail must not save records");
  node('cPara').value='operaciones@geotec.cl';await run('guardarConfig()');
  assert(requests.at(-1).url.includes('ddh_pruebas_correo_config'));
  assert.equal(JSON.parse(requests.at(-1).opts.body).user_id,'test-user');
@@ -39,5 +36,5 @@ run("authSession={user:{id:'test-user',email:'test@geotec.cl'},access_token:'tok
  const body=JSON.parse(requests.at(-1).opts.body);assert.equal(body.p_tipo,'ajuste');assert.equal(body.p_items[0].expected_updated_at,'2026-10-10T00:00:00Z');
  run('mcImportPreview=[{match:materialesCache[0],stock:9}]');await run('confirmarInventarioExcel()');
  assert.equal(JSON.parse(requests.at(-1).opts.body).p_tipo,'importacion');assert.equal(run('mcImportPreview.length'),0);
- console.log('PASS: history deduplication and versions, failed-save mail protection, projection snapshot, user config sync, inventory RPC and Excel batch.');
+ console.log('PASS: history deduplication and versions, failed-save mail protection, projection without history writes, user config sync, inventory RPC and Excel batch.');
 })().catch(e=>{console.error(e);process.exitCode=1});
