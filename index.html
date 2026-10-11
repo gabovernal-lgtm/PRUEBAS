@@ -320,7 +320,7 @@ body{background:linear-gradient(#fff,#f6faff)!important}
 </div><div class="mc-section" id="mcSecEstado" hidden><h3>Estado de materiales críticos</h3><div class="actions"><button class="btn btn-blue" onclick="pdfMateriales()">Descargar PDF con fecha</button></div>
 <p class="note">Ordenado por déficit porcentual, de más a menos urgente. Marque los materiales e indique cuánto necesita solicitar.</p>
 <div id="mcTabla" style="overflow-x:auto"></div>
-<div class="grid"><label>Correo comprador</label><input id="mcComprador" type="email" placeholder="comprador@geotec.cl"></div>
+<p class="note">Destinatarios: Configuración de correo → Solicitud de materiales críticos.</p>
 <div class="actions"><button class="btn btn-blue" onclick="solicitarMateriales()">Abrir correo de solicitud</button><button class="btn btn-white" onclick="cargarMateriales()">Actualizar informe</button></div>
 </div><div id="mcEstado" class="note"></div></div></section>
 <section id="view-coronas" class="hidden"><div class="panel">
@@ -365,7 +365,7 @@ body{background:linear-gradient(#fff,#f6faff)!important}
 <label>Para:</label><input id="cPara">
 <label>CC:</label><input id="cCC">
 </div>
-<h3 class="section-title">Minuta de reuniones</h3>
+<h3 class="section-title">Solicitud de materiales críticos</h3><div class="grid"><label>Para materiales:</label><input id="cParaMateriales" placeholder="Correos del comprador separados por ;"><label>CC materiales:</label><input id="cCCMateriales" placeholder="Opcional"></div><h3 class="section-title">Minuta de reuniones</h3>
 <div class="grid">
 <label>Para minuta:</label><input id="cParaMinuta" placeholder="Correos Geotec">
 <label>CC minuta:</label><input id="cCCMinuta" placeholder="Opcional">
@@ -444,7 +444,7 @@ $("cParaMinuta").value=localStorage.getItem("ddh_para_minuta")||"";
 $("cCCMinuta").value=localStorage.getItem("ddh_cc_minuta")||"";
 $("cParaReparacion").value=localStorage.getItem("ddh_para_reparacion")||"";
 $("cCCReparacion").value=localStorage.getItem("ddh_cc_reparacion")||"";
-$("cParaCoronas").value=localStorage.getItem("ddh_para_coronas")||"";
+$("cParaMateriales").value=localStorage.getItem("ddh_para_materiales")||"";$("cCCMateriales").value=localStorage.getItem("ddh_cc_materiales")||"";$("cParaCoronas").value=localStorage.getItem("ddh_para_coronas")||"";
 $("cCCCoronas").value=localStorage.getItem("ddh_cc_coronas")||"";
 $("coEquipo").innerHTML+=EQUIPOS_CRONOS.map(e=>`<option value="${esc(e)}">${esc(e)}</option>`).join("")+`<option value="OTRO">Otro equipo</option>`;
 $("coFiltroEquipo").innerHTML+=EQUIPOS_CRONOS.map(e=>`<option value="${esc(e)}">${esc(e)}</option>`).join("");
@@ -458,7 +458,7 @@ $("rFotos").addEventListener("change",function(){if(this.files.length>6){alert("
 $("fFotos").addEventListener("change",function(){if(this.files.length>6){alert("Puede seleccionar un máximo de 6 fotografías.");this.value="";}});
 if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(()=>{});
 }
-function guardarConfig(){localStorage.setItem("ddh_para_coronas",val("cParaCoronas"));localStorage.setItem("ddh_cc_coronas",val("cCCCoronas"));localStorage.setItem("ddh_para",val("cPara"));localStorage.setItem("ddh_cc",val("cCC"));localStorage.setItem("ddh_para_minuta",val("cParaMinuta"));localStorage.setItem("ddh_cc_minuta",val("cCCMinuta"));localStorage.setItem("ddh_para_reparacion",val("cParaReparacion"));localStorage.setItem("ddh_cc_reparacion",val("cCCReparacion"));localStorage.setItem("ddh_para_flota",val("cParaFlota"));localStorage.setItem("ddh_cc_flota",val("cCCFlota"));setStatus("Configuración de correo guardada en este navegador.")}
+function guardarConfig(){localStorage.setItem("ddh_para_materiales",val("cParaMateriales"));localStorage.setItem("ddh_cc_materiales",val("cCCMateriales"));localStorage.setItem("ddh_para_coronas",val("cParaCoronas"));localStorage.setItem("ddh_cc_coronas",val("cCCCoronas"));localStorage.setItem("ddh_para",val("cPara"));localStorage.setItem("ddh_cc",val("cCC"));localStorage.setItem("ddh_para_minuta",val("cParaMinuta"));localStorage.setItem("ddh_cc_minuta",val("cCCMinuta"));localStorage.setItem("ddh_para_reparacion",val("cParaReparacion"));localStorage.setItem("ddh_cc_reparacion",val("cCCReparacion"));localStorage.setItem("ddh_para_flota",val("cParaFlota"));localStorage.setItem("ddh_cc_flota",val("cCCFlota"));setStatus("Configuración de correo guardada en este navegador.")}
 function mailto(subject,body){
 const para=val("cPara");const cc=val("cCC");
 const url=`mailto:${encodeURIComponent(para)}?cc=${encodeURIComponent(cc)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -1341,9 +1341,11 @@ function solicitarMateriales(){
  const items=[...document.querySelectorAll(".mcCheck:checked")].map(c=>{const m=materialesCache.find(x=>String(x.id)===c.dataset.id);const n=Number(document.querySelector('.mcPedido[data-id="'+c.dataset.id+'"]').value);return {m,n}}).filter(x=>x.m);
  if(!items.length)return alert("Marque al menos un material.");
  if(items.some(x=>!Number.isFinite(x.n)||x.n<=0))return alert("Indique cantidades mayores a cero.");
- const comprador=val("mcComprador");if(!comprador||!/^\S+@\S+\.\S+$/.test(comprador))return alert("Ingrese el correo del comprador.");
+ const comprador=localStorage.getItem("ddh_para_materiales")||"";const cc=localStorage.getItem("ddh_cc_materiales")||"";if(!comprador.trim())return alert("Configure los destinatarios en Configuración de correo → Solicitud de materiales críticos.");
+ const emails=x=>x.split(/[;,\s]+/).map(t=>t.trim()).filter(Boolean);
+ if([...emails(comprador),...emails(cc)].some(x=>!/^\S+@\S+\.\S+$/.test(x)))return alert("Revise los correos configurados para materiales.");
  const body="Estimados:\n\nSolicito gestionar la compra de los siguientes materiales críticos:\n\n"+items.map((x,i)=>(i+1)+". "+x.m.tipo+" / "+x.m.nombre+"\nCantidad solicitada: "+x.n+" "+x.m.unidad+"\nStock actual: "+x.m.stock+" | Cantidad crítica: "+x.m.cantidad_critica).join("\n\n")+"\n\nFavor confirmar disponibilidad y plazo de entrega.\n\nSaludos.";
- window.location.href="mailto:"+encodeURIComponent(comprador)+"?subject="+encodeURIComponent("SOLICITUD DE COMPRA - MATERIALES CRÍTICOS")+"&body="+encodeURIComponent(body);
+ window.location.href="mailto:"+emails(comprador).map(encodeURIComponent).join(",")+"?cc="+encodeURIComponent(emails(cc).join(","))+"&subject="+encodeURIComponent("SOLICITUD DE COMPRA - MATERIALES CRÍTICOS")+"&body="+encodeURIComponent(body);
 }
 
 // Rebaje de Coronas: tabla y permisos independientes del historial general.
