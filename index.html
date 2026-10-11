@@ -345,12 +345,12 @@ body{background:linear-gradient(#fff,#f6faff)!important}
 <div class="module-head"><h2>Historial de operaciones</h2><button class="btn btn-white" onclick="showView('home')">← Volver al menú</button></div>
 <div class="toolbar">
 <button class="btn btn-light" onclick="cargarHistorial()">Actualizar historial</button>
-<select id="hTipo" onchange="renderHistorial()"><option value="">Todos los tipos</option><option>TRASLADO</option><option>SRM</option><option>DEVOLUCIÓN</option><option>MINUTA</option><option>REPARACIÓN / MANTENCIÓN CAMIONETA</option><option>EQUIPOS FLOTA / SONDAS</option></select>
+<select id="hTipo" onchange="renderHistorial()"><option value="">Todos los tipos</option><option>TRASLADO</option><option>SRM</option><option>DEVOLUCIÓN</option><option>MINUTA</option><option>REPARACIÓN / MANTENCIÓN CAMIONETA</option><option>EQUIPOS FLOTA / SONDAS</option><option>PROYECCIÓN EQUIPOS</option></select>
 <select id="hEquipo" onchange="renderHistorial()"><option value="">Todos los equipos</option></select>
 <input id="hBuscar" placeholder="Buscar pozo, supervisor, sector..." oninput="renderHistorial()" style="min-width:240px">
 <label>Desde <input id="hDesde" type="date" onchange="renderHistorial()"></label>
 <label>Hasta <input id="hHasta" type="date" onchange="renderHistorial()"></label>
-<button class="btn btn-blue" onclick="exportarHistorialPDF()">Descargar PDF filtrado</button>
+<button class="btn btn-blue" onclick="exportarHistorialPDF()">Descargar PDF filtrado</button><button class="btn btn-white" onclick="exportarHistorialCSV()">Exportar Excel</button>
 </div>
 <div id="historialEstado" class="note"></div>
 <div class="history-wrap"><div id="historialTabla"></div></div>
@@ -359,7 +359,7 @@ body{background:linear-gradient(#fff,#f6faff)!important}
 
 <section id="view-config" class="hidden">
 <div class="panel">
-<div class="module-head"><h2>Configuración de correo</h2><button class="btn btn-white" onclick="showView('home')">← Volver al menú</button></div>
+<p class="note">Los destinatarios se guardan en su cuenta de PRUEBAS y se cargan al iniciar sesión en otro dispositivo.</p><div class="module-head"><h2>Configuración de correo</h2><button class="btn btn-white" onclick="showView('home')">← Volver al menú</button></div>
 <h3 class="section-title" style="margin-top:0">Traslado / SRM / Devolución</h3>
 <div class="grid">
 <label>Para:</label><input id="cPara">
@@ -458,7 +458,35 @@ $("rFotos").addEventListener("change",function(){if(this.files.length>6){alert("
 $("fFotos").addEventListener("change",function(){if(this.files.length>6){alert("Puede seleccionar un máximo de 6 fotografías.");this.value="";}});
 if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(()=>{});
 }
-function guardarConfig(){localStorage.setItem("ddh_para_materiales",val("cParaMateriales"));localStorage.setItem("ddh_cc_materiales",val("cCCMateriales"));localStorage.setItem("ddh_para_coronas",val("cParaCoronas"));localStorage.setItem("ddh_cc_coronas",val("cCCCoronas"));localStorage.setItem("ddh_para",val("cPara"));localStorage.setItem("ddh_cc",val("cCC"));localStorage.setItem("ddh_para_minuta",val("cParaMinuta"));localStorage.setItem("ddh_cc_minuta",val("cCCMinuta"));localStorage.setItem("ddh_para_reparacion",val("cParaReparacion"));localStorage.setItem("ddh_cc_reparacion",val("cCCReparacion"));localStorage.setItem("ddh_para_flota",val("cParaFlota"));localStorage.setItem("ddh_cc_flota",val("cCCFlota"));setStatus("Configuración de correo guardada en este navegador.")}
+const CORREO_CAMPOS={cPara:"ddh_para",cCC:"ddh_cc",cParaMateriales:"ddh_para_materiales",cCCMateriales:"ddh_cc_materiales",cParaMinuta:"ddh_para_minuta",cCCMinuta:"ddh_cc_minuta",cParaReparacion:"ddh_para_reparacion",cCCReparacion:"ddh_cc_reparacion",cParaCoronas:"ddh_para_coronas",cCCCoronas:"ddh_cc_coronas",cParaFlota:"ddh_para_flota",cCCFlota:"ddh_cc_flota"};
+function correoConfigKey(){return "ddh_pruebas_correo_"+authSession.user.id}
+function aplicarCorreoConfig(datos){for(const id of Object.keys(CORREO_CAMPOS))$(id).value=typeof datos[id]==="string"?datos[id]:""}
+async function correoConfigRequest(method="GET",body){
+ const r=await fetch(AUTH_PROJECT_URL+"/rest/v1/ddh_pruebas_correo_config"+(method==="GET"?"?select=destinatarios&user_id=eq."+encodeURIComponent(authSession.user.id):"?on_conflict=user_id"),{method,headers:{...authHeaders(),Authorization:"Bearer "+await validToken(),Prefer:"resolution=merge-duplicates,return=minimal"},...(body?{body:JSON.stringify(body)}:{})});
+ if(!r.ok)throw new Error("No se pudo sincronizar la configuración ("+r.status+").");
+ const text=await r.text();return text?JSON.parse(text):null;
+}
+async function cargarConfigCorreo(){
+ const key=correoConfigKey();
+ let local={};try{local=JSON.parse(localStorage.getItem(key)||"{}")}catch(e){}
+ if(!localStorage.getItem(key)){
+  const owner=localStorage.getItem("ddh_pruebas_correo_legacy_owner");
+  if(!owner||owner===authSession.user.id){localStorage.setItem("ddh_pruebas_correo_legacy_owner",authSession.user.id);local=Object.fromEntries(Object.entries(CORREO_CAMPOS).map(([id,k])=>[id,localStorage.getItem(k)||""]))}
+ }
+ aplicarCorreoConfig(local);
+ try{const rows=await correoConfigRequest();if(rows.length){aplicarCorreoConfig(rows[0].destinatarios);localStorage.setItem(key,JSON.stringify(rows[0].destinatarios))}}
+ catch(e){setStatus("Se cargó la configuración local. "+e.message)}
+}
+let correoConfigGuardando=false;
+async function guardarConfig(){
+ if(!authProfile||correoConfigGuardando)return;
+ const datos=Object.fromEntries(Object.keys(CORREO_CAMPOS).map(id=>[id,val(id)]));
+ if(Object.values(datos).some(v=>v.split(/[;,\s]+/).filter(Boolean).some(x=>!/^\S+@\S+\.\S+$/.test(x))))return alert("Revise los correos: separe las direcciones con ; o coma.");
+ correoConfigGuardando=true;
+ try{await correoConfigRequest("POST",{user_id:authSession.user.id,destinatarios:datos,updated_at:new Date().toISOString()});localStorage.setItem(correoConfigKey(),JSON.stringify(datos));setStatus("Configuración guardada en su cuenta. Disponible al ingresar en PRUEBAS desde otro dispositivo.")}
+ catch(e){setStatus(e.message+" Los cambios no se guardaron. Intente nuevamente.");alert("No se guardó la configuración. Revise la conexión e intente nuevamente.")}
+ finally{correoConfigGuardando=false}
+}
 function mailto(subject,body){
 const para=val("cPara");const cc=val("cCC");
 const url=`mailto:${encodeURIComponent(para)}?cc=${encodeURIComponent(cc)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -467,7 +495,7 @@ window.location.href=url;
 async function api(path="",opts={}){
 const r=await fetch(SUPABASE_URL+path,{...opts,headers:{"Authorization":"Bearer "+(await validToken()),"apikey":SUPABASE_KEY,"Content-Type":"application/json","Accept":"application/json",...(opts.headers||{})}});
 if(!r.ok)throw new Error(`Supabase ${r.status}: ${await r.text()}`);
-return r.status===204?null:await r.json();
+const text=await r.text();return text?JSON.parse(text):null;
 }
 function identificador(...a){return a.join("|").toUpperCase().replace(/\s+/g," ").trim()}
 
@@ -494,14 +522,14 @@ function datosCompletosHistorial(tipo){
 }
 
 async function guardarOnline(reg){
-try{
-reg.datos=datosCompletosHistorial(reg.tipo);
-const q="?select=id&identificador=eq."+encodeURIComponent(reg.identificador)+"&limit=1";
-const existe=await api(q);
-if(existe.length){await api("?id=eq."+encodeURIComponent(existe[0].id),{method:"PATCH",headers:{"Prefer":"return=minimal"},body:JSON.stringify({datos:reg.datos})});return true;}
-await api("",{method:"POST",headers:{"Prefer":"return=minimal"},body:JSON.stringify(reg)});
-return true;
-}catch(e){console.error(e);setStatus("El correo se preparó, pero no fue posible guardar el historial online.");return false}
+ try{
+  const datos=reg.datos??datosCompletosHistorial(reg.tipo);
+  const snapshot={...reg,datos:{...datos,cuenta_usuario:authSession?.user?.email||""}};
+  const hash=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(JSON.stringify(snapshot)));
+  snapshot.identificador=reg.identificador+"|V2|"+Array.from(new Uint8Array(hash),b=>b.toString(16).padStart(2,"0")).join("");
+  await api("?on_conflict=identificador",{method:"POST",headers:{Prefer:"resolution=ignore-duplicates,return=minimal"},body:JSON.stringify(snapshot)});
+  return true;
+ }catch(e){console.error(e);const mensaje="No se pudo guardar el historial. Revise la conexión e intente nuevamente. No se abrió el correo.";setStatus(mensaje);alert(mensaje);return false}
 }
 function req(ids){for(const [id,n] of ids){if(!val(id)){alert("Debe ingresar: "+n);$(id).focus();return false}}return true}
 
@@ -512,7 +540,7 @@ async function correoTraslado(){
 if(!req([["tFecha","Fecha"],["tTurno","Turno"],["tEquipo","Equipo"],["tOrigen","Sector de origen"],["tDestino","Sector de destino"],["tSupervisor","Supervisor"],["tJefe","Jefe de faena"]]))return;
 const d=datosTraslado();
 const reg={tipo:"TRASLADO",fecha:d.fecha,equipo:d.equipo,pozo:"",sector_origen:d.origen,sector_destino:d.destino,sector:"",supervisor:d.supervisor,jefe_faena:d.jefe,detalle:"Turno: "+d.turno,estado:"Correo abierto para revisión",identificador:identificador("TRASLADO",d.fecha,d.equipo,d.origen,d.destino)};
-await guardarOnline(reg);
+if(!(await guardarOnline(reg)))return;
 setStatus("Borrador de traslado preparado; revisa el historial para confirmar el guardado.");
 mailto("SOLICITUD TRASLADO EQUIPO - "+d.equipo,
 `Estimados:\n\nJunto con saludar, encontrarán adjuntos los riesgos y controles asociados al traslado del equipo ${d.equipo}.\n\nSector de origen: ${d.origen}\nSector de destino: ${d.destino}\n\nSolicitamos su revisión y autorización.\n\nUna vez finalizado el traslado, se enviarán los GRT asociados a la actividad.\n\nSaludos,\nDEPARTAMENTO DE OPERACIONES DDH`);
@@ -522,7 +550,7 @@ function limpiarTraslado(){["tCamioneta","tConductorEscolta","tEquipo","tConduct
 async function correoSRM(){
 if(!req([["sPozo","Nombre de pozo"],["sEquipo","Equipo sonda"],["sFondo","Fondo del TSRM"]]))return;
 const pozo=val("sPozo"),equipo=val("sEquipo"),fondo=val("sFondo"),fecha=fechaHoy();
-await guardarOnline({tipo:"SRM",fecha,equipo,pozo,sector_origen:"",sector_destino:"",sector:"",supervisor:"",jefe_faena:"",detalle:"Fondo TSRM: "+fondo,estado:"Correo abierto para revisión",identificador:identificador("SRM",fecha,equipo,pozo,fondo)});
+if(!(await guardarOnline({tipo:"SRM",fecha,equipo,pozo,sector_origen:"",sector_destino:"",sector:"",supervisor:"",jefe_faena:"",detalle:"Fondo TSRM: "+fondo,estado:"Correo abierto para revisión",identificador:identificador("SRM",fecha,equipo,pozo,fondo)})))return;
 setStatus("SRM guardado en historial online. Abriendo borrador de correo.");
 mailto(`Tricono SRM Pozo ${pozo}. Equipo ${equipo}`,
 `Estimados:\n\nJunto con saludar, escribimos para formalizar la perforación SRM del pozo ${pozo} con el equipo ${equipo} hasta un fondo de ${fondo}.\n\nQuedamos atentos a sus comentarios.\n\nATTE\nDEPARTAMENTO OPERACIONES DDH`);
@@ -538,7 +566,7 @@ if(!req([["dPozo","Pozo"],["dEquipo","Equipo de perforación"],["dSector","Secto
 for(let i=1;i<=6;i++){if(!val("dCumple"+i)){alert(`Seleccione Sí, No o N/A en la verificación ${i}.`);return}}
 const d=datosDev();
 const detalle=d.checks.map((x,i)=>`${i+1}: ${x.c}${x.o?" - "+x.o:""}`).concat(d.obs?["Observaciones generales: "+d.obs]:[]).join(" | ");
-await guardarOnline({tipo:"DEVOLUCIÓN",fecha:d.fecha,equipo:d.equipo,pozo:d.pozo,sector_origen:"",sector_destino:"",sector:d.sector,supervisor:d.supervisor,jefe_faena:d.jefe,detalle,estado:"Correo abierto para revisión",identificador:identificador("DEVOLUCIÓN",d.fecha,d.equipo,d.pozo,d.sector)});
+if(!(await guardarOnline({tipo:"DEVOLUCIÓN",fecha:d.fecha,equipo:d.equipo,pozo:d.pozo,sector_origen:"",sector_destino:"",sector:d.sector,supervisor:d.supervisor,jefe_faena:d.jefe,detalle,estado:"Correo abierto para revisión",identificador:identificador("DEVOLUCIÓN",d.fecha,d.equipo,d.pozo,d.sector)})))return;
 setStatus("Devolución guardada en historial online. Abriendo borrador de correo.");
 mailto(`Devolución plataforma ${d.pozo} - equipo ${d.equipo}`,
 `Estimados:\n\nJunto con saludar, adjunto documento de entrega de la plataforma del pozo ${d.pozo}, del sector ${d.sector}, construido por el equipo ${d.equipo}.\n\nQuedamos atentos a sus comentarios.\n\nATTE.\nDEPARTAMENTO OPERACIONES DDH`);
@@ -547,8 +575,8 @@ function limpiarDevolucion(){["dPozo","dEquipo","dSector","dSupervisor","dJefe",
 
 
 function mailtoMinuta(subject,body){
- const para=val("cParaMinuta")||localStorage.getItem("ddh_para_minuta")||"";
- const cc=val("cCCMinuta")||localStorage.getItem("ddh_cc_minuta")||"";
+ const para=val("cParaMinuta");
+ const cc=val("cCCMinuta");
  if(!para){alert("Configure primero el destinatario de Minuta en “Configuración de correo”.");showView("config");$("cParaMinuta").focus();return false}
  const url=`mailto:${encodeURIComponent(para)}?cc=${encodeURIComponent(cc)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
  window.location.href=url; return true;
@@ -580,7 +608,7 @@ async function correoMinuta(){
  const cuerpo=`Estimados:\n\nJunto con saludar, se les ruega revisar más abajo los acuerdos y compromisos tomados en la reunión ${nombre}.\n\nPARTICIPANTES:\n${participantes}\n\n${sep}\nACUERDOS Y COMPROMISOS\n${sep}\n${bloques}\n${sep}\n\nSaludos,\nDEPARTAMENTO OPERACIONES DDH`;
  const detalle=acuerdos.map(a=>`${a.n}) ${a.compromiso||"-"} | Responsable: ${a.responsable||"-"} | Fecha: ${a.fecha||"-"}`).join(" || ");
  try{
-   await guardarOnline({tipo:"MINUTA",fecha,equipo:"",pozo:nombre,sector_origen:"",sector_destino:"",sector:"",supervisor:"",jefe_faena:"",detalle:`Hora: ${hora} | Participantes: ${participantes} | ${detalle}`,estado:"Correo abierto para revisión",identificador:identificador("MINUTA",fecha,hora,nombre)});
+   if(!(await guardarOnline({tipo:"MINUTA",fecha,equipo:"",pozo:nombre,sector_origen:"",sector_destino:"",sector:"",supervisor:"",jefe_faena:"",detalle:`Hora: ${hora} | Participantes: ${participantes} | ${detalle}`,estado:"Correo abierto para revisión",identificador:identificador("MINUTA",fecha,hora,nombre)})))return;
  }catch(e){}
  if(mailtoMinuta(asunto,cuerpo)) setStatus("Minuta guardada en historial online. Abriendo borrador de correo.");
 }
@@ -591,8 +619,8 @@ function limpiarMinuta(){
 }
 
 function mailtoReparacion(subject,body){
- const para=val("cParaReparacion")||localStorage.getItem("ddh_para_reparacion")||"";
- const cc=val("cCCReparacion")||localStorage.getItem("ddh_cc_reparacion")||"";
+ const para=val("cParaReparacion");
+ const cc=val("cCCReparacion");
  if(!para){alert("Configure primero el destinatario de Reparación / mantención camioneta en “Configuración de correo”.");showView("config");$("cParaReparacion").focus();return false}
  const url=`mailto:${encodeURIComponent(para)}?cc=${encodeURIComponent(cc)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
  window.location.href=url; return true;
@@ -604,7 +632,7 @@ function datosReparacionCamioneta(){const kmActual=kmNumero("rKmActual"),kmMante
 async function correoReparacionCamioneta(){
  if(!req([["rInterno","N° interno"],["rPatente","Patente"],["rKmActual","Kilometraje / Horómetro actual"],["rDetalles","Detalles reparación / mantención"]]))return;
  const d=datosReparacionCamioneta();
- try{await guardarOnline({tipo:"REPARACIÓN / MANTENCIÓN CAMIONETA",fecha:d.fecha,equipo:d.interno,pozo:"",sector_origen:"",sector_destino:"",sector:d.patente,supervisor:"",jefe_faena:"",detalle:`Kilometraje / Horómetro actual: ${fmtKm(d.kmActual)}${d.kmMantencion!==null?` | Kilometraje / Horómetro próxima mantención: ${fmtKm(d.kmMantencion)} | ${d.kmRestante>=0?`Faltan ${fmtKm(d.kmRestante)} unidades para mantención`:`Mantención excedida en ${fmtKm(Math.abs(d.kmRestante))} unidades`}`:""} | Detalles por reparar: ${d.detalles}`,estado:"Correo abierto para revisión",identificador:identificador("REPARACIÓN / MANTENCIÓN CAMIONETA",d.fecha,d.interno,d.patente,d.detalles)});}catch(e){}
+ try{if(!(await guardarOnline({tipo:"REPARACIÓN / MANTENCIÓN CAMIONETA",fecha:d.fecha,equipo:d.interno,pozo:"",sector_origen:"",sector_destino:"",sector:d.patente,supervisor:"",jefe_faena:"",detalle:`Kilometraje / Horómetro actual: ${fmtKm(d.kmActual)}${d.kmMantencion!==null?` | Kilometraje / Horómetro próxima mantención: ${fmtKm(d.kmMantencion)} | ${d.kmRestante>=0?`Faltan ${fmtKm(d.kmRestante)} unidades para mantención`:`Mantención excedida en ${fmtKm(Math.abs(d.kmRestante))} unidades`}`:""} | Detalles por reparar: ${d.detalles}`,estado:"Correo abierto para revisión",identificador:identificador("REPARACIÓN / MANTENCIÓN CAMIONETA",d.fecha,d.interno,d.patente,d.detalles)})))return;}catch(e){}
  const asunto=`REPARACIÓN / MANTENCIÓN CAMIONETA - ${d.interno} - ${d.patente}`;
  const kmMail=`KILOMETRAJE / HORÓMETRO ACTUAL: ${fmtKm(d.kmActual)}${d.kmMantencion!==null?`\nKILOMETRAJE / HORÓMETRO PRÓXIMA MANTENCIÓN: ${fmtKm(d.kmMantencion)}\n${d.kmRestante>=0?`FALTAN ${fmtKm(d.kmRestante)} UNIDADES PARA LA MANTENCIÓN.`:`MANTENCIÓN EXCEDIDA EN ${fmtKm(Math.abs(d.kmRestante))} UNIDADES.`}`:""}`;
  const cuerpo=`Estimados:\n\nJunto con saludar, se solicita gestionar la reparación / mantención de la camioneta ${d.interno}, patente ${d.patente}, debido a los siguientes requerimientos:\n\n${kmMail}\n\nDETALLES REPARACIÓN / MANTENCIÓN:\n${d.detalles}\n\nSe adjunta registro en PDF con el detalle de la solicitud y respaldo fotográfico correspondiente.\n\nQuedamos atentos a la coordinación y programación de los trabajos.\n\nSaludos,\nDEPARTAMENTO OPERACIONES DDH`;
@@ -643,8 +671,8 @@ async function pdfReparacionCamioneta(){
 $("rKmActual").addEventListener("input",actualizarKmRestante);$("rKmMantencion").addEventListener("input",actualizarKmRestante);
 
 function mailtoFlota(subject,body){
- const para=val("cParaFlota")||localStorage.getItem("ddh_para_flota")||"";
- const cc=val("cCCFlota")||localStorage.getItem("ddh_cc_flota")||"";
+ const para=val("cParaFlota");
+ const cc=val("cCCFlota");
  if(!para){alert("Configure primero el destinatario de Equipos Flota / Sondas en Configuración de correo.");showView("config");$("cParaFlota").focus();return false}
  window.location.href=`mailto:${encodeURIComponent(para)}?cc=${encodeURIComponent(cc)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;return true;
 }
@@ -654,7 +682,7 @@ async function correoFlota(){
  if(!req([["fInterno","N° interno / Equipo"],["fKmActual","Kilometraje / Horómetro actual"],["fDetalles","Detalles reparación / mantención"]]))return;
  const d=datosFlota();
  const estado=d.prox!==null?(d.restante>=0?`Faltan ${fmtKm(d.restante)} unidades para mantención`:`Mantención excedida en ${fmtKm(Math.abs(d.restante))} unidades`):"";
- try{await guardarOnline({tipo:"EQUIPOS FLOTA / SONDAS",fecha:d.fecha,equipo:d.interno,pozo:"",sector_origen:"",sector_destino:"",sector:d.tipo,supervisor:"",jefe_faena:"",detalle:`Kilometraje / Horómetro actual: ${fmtKm(d.actual)}${d.prox!==null?` | Kilometraje / Horómetro próxima mantención: ${fmtKm(d.prox)} | ${estado}`:""} | Detalles reparación / mantención: ${d.detalles}`,estado:"Correo abierto para revisión",identificador:identificador("EQUIPOS FLOTA / SONDAS",d.fecha,d.interno,d.detalles)});}catch(e){}
+ try{if(!(await guardarOnline({tipo:"EQUIPOS FLOTA / SONDAS",fecha:d.fecha,equipo:d.interno,pozo:"",sector_origen:"",sector_destino:"",sector:d.tipo,supervisor:"",jefe_faena:"",detalle:`Kilometraje / Horómetro actual: ${fmtKm(d.actual)}${d.prox!==null?` | Kilometraje / Horómetro próxima mantención: ${fmtKm(d.prox)} | ${estado}`:""} | Detalles reparación / mantención: ${d.detalles}`,estado:"Correo abierto para revisión",identificador:identificador("EQUIPOS FLOTA / SONDAS",d.fecha,d.interno,d.detalles)})))return;}catch(e){}
  const medicion=`KILOMETRAJE / HORÓMETRO ACTUAL: ${fmtKm(d.actual)}${d.prox!==null?`\nKILOMETRAJE / HORÓMETRO PRÓXIMA MANTENCIÓN: ${fmtKm(d.prox)}\n${estado.toUpperCase()}.`:""}`;
  const asunto=`REPARACIÓN / MANTENCIÓN EQUIPOS FLOTA / SONDAS - ${d.interno}`;
  const cuerpo=`Estimados:\n\nJunto con saludar, se solicita gestionar la reparación / mantención del equipo ${d.interno}${d.tipo?`, tipo ${d.tipo}`:""}.\n\n${medicion}\n\nDETALLES REPARACIÓN / MANTENCIÓN:\n${d.detalles}\n\nSe adjunta registro en PDF con el detalle de la solicitud y respaldo fotográfico correspondiente.\n\nQuedamos atentos a la coordinación y programación de los trabajos.\n\nSaludos,\nDEPARTAMENTO OPERACIONES DDH`;
@@ -684,7 +712,7 @@ try{
   if(lote.length<tam)break;
   if(offset>=20000){$("historialEstado").textContent="Se cargaron los primeros 20.000 registros. Acota el período para un reporte más extenso.";break;}
  }
- historialCache=todos.filter(o=>o.tipo!=="PROYECCIÓN EQUIPOS");actualizarEquiposHistorial();renderHistorial();
+ historialCache=todos;actualizarEquiposHistorial();renderHistorial();
 }catch(e){console.error(e);$("historialEstado").textContent="No fue posible conectar con Supabase. Revisa la configuración y tus permisos.";$("historialTabla").innerHTML=""}
 }
 function actualizarEquiposHistorial(){
@@ -735,6 +763,7 @@ function exportarHistorialPDF(){
   "REPARACIÓN / MANTENCIÓN CAMIONETA":[["Fecha registro",r=>fecha(r.created_at)],["Fecha solicitud",r=>texto(r.fecha)],["Camioneta / N° interno",r=>texto(r.equipo)],["Supervisor",r=>texto(r.supervisor)],["Detalle",r=>texto(r.detalle)]],
   "EQUIPOS FLOTA / SONDAS":[["Fecha registro",r=>fecha(r.created_at)],["Fecha solicitud",r=>texto(r.fecha)],["Equipo",r=>texto(r.equipo)],["Supervisor",r=>texto(r.supervisor)],["Detalle",r=>texto(r.detalle)]]
  };
+ campos["PROYECCIÓN EQUIPOS"]=[["Fecha registro",r=>fecha(r.created_at)],["Equipo",r=>texto(r.equipo)],["Pozo",r=>texto(r.pozo)],["Metros",r=>detalle(r,"metros")],["Origen",r=>texto(r.sector_origen)],["Destino",r=>texto(r.sector_destino)],["Grupo",r=>detalle(r,"grupo")],["Recepción",r=>detalle(r,"recepcion")],["Observaciones",r=>detalle(r,"obs")],["Coordinación",r=>detalle(r,"coordinacion")]];
  const cols=campos[tipo]||campos["TRASLADO"];
  const header=()=>{
   doc.setFillColor(18,60,105);doc.rect(0,0,297,22,"F");
@@ -945,6 +974,17 @@ function filasProyeccion(){
  return rows.sort((a,b)=>a.metros-b.metros);
 }
 function fmtMetros(n){return new Intl.NumberFormat("es-CL",{maximumFractionDigits:2}).format(n)}
+async function guardarProyeccion(filas){
+ if(!isAdmin())return false;
+ const fecha=fechaHoy(),coordinacion=val("pCoordinacion");
+ for(const f of filas){
+  if(!(await guardarOnline({tipo:"PROYECCIÓN EQUIPOS",fecha,equipo:f.equipo,pozo:f.pozo,
+   sector_origen:f.sector,sector_destino:f.proximo,detalle:f.metros+" m | "+f.grupo+" | "+f.obs,
+   estado:"Proyección preparada",identificador:identificador("PROYECCIÓN EQUIPOS",fecha,f.equipo,f.pozo),
+   datos:{...f,coordinacion}})))return false;
+ }
+ return true;
+}
 async function pdfProyeccion(compartir=false){
  const filas=filasProyeccion();if(filas===null)return;
  if(!filas.length){alert("Ingrese o importe al menos un equipo.");return}
@@ -986,8 +1026,9 @@ async function pdfProyeccion(compartir=false){
  }
  const total=doc.getNumberOfPages();for(let i=1;i<=total;i++){doc.setPage(i);doc.setFontSize(7);doc.setTextColor(100);doc.text("DEPARTAMENTO OPERACIONES DDH",9,203);doc.text("Página "+i+" de "+total,288,203,{align:"right"})}
  const name="PROYECCION_EQUIPOS_"+fecha+".pdf";
+ if(!(await guardarProyeccion(filas)))return;
  if(compartir&&navigator.share&&navigator.canShare){const file=new File([doc.output("blob")],name,{type:"application/pdf"});if(navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:"Proyección de equipos"});return}catch(e){if(e.name==="AbortError")return}}}
- doc.save(name);setStatus("PDF de proyección generado.");
+ doc.save(name);setStatus("PDF de proyección generado y datos guardados en historial.");
 }
 async function correoProyeccion(){
  const filas=filasProyeccion();if(filas===null)return;
@@ -1005,6 +1046,7 @@ async function correoProyeccion(){
   "Saludos,",
   "DEPARTAMENTO OPERACIONES DDH"
  ].join("\n");
+ if(!(await guardarProyeccion(filas)))return;
  mailto("Proyección a corto plazo equipos DDH + RC ("+fecha+")",cuerpo);
  setStatus("Correo preparado con el mismo detalle de coordinación del PDF. Adjunte el PDF generado.");
 }
@@ -1286,22 +1328,21 @@ async function previsualizarInventario(){
  mcEstado("Coincidencias: "+mcImportPreview.filter(x=>x.match).length+". Sin coincidencia: "+mcImportPreview.filter(x=>!x.match).length+". Revise antes de confirmar.");
  }catch(e){mcEstado("Error leyendo Excel: "+e.message)}
 }
+let mcGuardando=false;
 async function confirmarInventarioExcel(){
- if(!isAdmin())return;
+ if(!isAdmin()||mcGuardando)return;
  const good=mcImportPreview.filter(x=>x.match);
- const ids=good.map(x=>x.match.id);
- if(new Set(ids).size!==ids.length)return alert("Un material aparece varias veces en el Excel. Revise antes de importar.");
+ if(new Set(good.map(x=>x.match.id)).size!==good.length)return alert("Un material aparece varias veces en el Excel.");
  if(!good.length)return alert("No hay coincidencias.");
- if(!confirm("Actualizar stock de "+good.length+" materiales? No se modificarán los mínimos críticos."))return;
- let ok=0,errors=[];
- for(const x of good){try{
- await mcRequest("?id=eq."+x.match.id,{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({stock:x.stock,actualizado_en:new Date().toISOString()})});
- ok++;
- }catch(e){errors.push(x.name+": "+e.message)}}
- mcImportPreview=[];$("mcConfirmarExcel").disabled=true;await cargarMateriales();
- mcEstado("Inventario actualizado: "+ok+" materiales. "+(errors.length?"Errores: "+errors.join("; "):"")+" No se modificó el stock crítico.");
+ if(!confirm("Actualizar stock de "+good.length+" materiales y registrar los movimientos? No se modificarán los mínimos críticos."))return;
+ mcGuardando=true;$("mcConfirmarExcel").disabled=true;
+ try{
+  const total=await rpc("ddh_pruebas_ajustar_inventario",{p_items:good.map(x=>({id:x.match.id,stock:x.stock,expected_updated_at:x.match.actualizado_en})),p_tipo:"importacion",p_observacion:"Importación de inventario Excel"});
+  mcImportPreview=[];await cargarMateriales();
+  mcEstado("Importación completada: "+total+" materiales modificados con movimiento registrado. Mínimos críticos conservados.");
+ }catch(e){mcEstado("No se confirmó la importación: "+e.message+". Actualice y vuelva a revisar el Excel.")}
+ finally{mcGuardando=false;$("mcConfirmarExcel").disabled=!mcImportPreview.length}
 }
-
 function mcShowSection(v){if(!isAdmin())return;const names={crear:"Crear",inventario:"Inventario",movimiento:"Movimiento",estado:"Estado"};for(const [key,id] of Object.entries(names))$("mcSec"+id).hidden=key!==v;document.querySelectorAll("#view-materiales .mc-menu button").forEach((b,i)=>b.classList.toggle("selected",Object.keys(names)[i]===v))}
 function pdfMateriales(){if(!isAdmin())return;if(!window.jspdf?.jsPDF)return alert("No se cargó el generador PDF.");const d=new window.jspdf.jsPDF({orientation:"landscape",unit:"mm",format:"a4"});d.setFontSize(17);d.text("GEOTEC - ESTADO DE MATERIALES CRITICOS",14,18);d.setFontSize(10);d.text("Fecha: "+new Date().toLocaleDateString("es-CL"),14,26);const groups=new Map();for(const m of materialesCache){if(!groups.has(m.tipo))groups.set(m.tipo,[]);groups.get(m.tipo).push(m)}const pct=m=>m.cantidad_critica>0?Math.max(0,(m.cantidad_critica-m.stock)/m.cantidad_critica*100):0;let y=36;for(const [tipo,items] of [...groups.entries()].sort((a,b)=>Math.max(...b[1].map(pct))-Math.max(...a[1].map(pct)))){if(y>180){d.addPage();y=18}d.setFont("helvetica","bold");d.setFontSize(12);d.text(tipo,14,y);y+=8;d.setFont("helvetica","normal");d.setFontSize(9);for(const m of items.sort(mcOrden)){if(y>194){d.addPage();y=18}d.text(d.splitTextToSize(m.nombre,125)[0],14,y);d.text("Critico: "+m.cantidad_critica,153,y);d.text("Stock: "+m.stock,191,y);d.text("Dif.: "+(m.stock-m.cantidad_critica),222,y);d.text("Deficit: "+pct(m).toFixed(1)+"%",252,y);y+=7}y+=5}d.save("MATERIALES_CRITICOS_"+new Date().toISOString().slice(0,10)+".pdf")}
 let materialesCache=[];
@@ -1331,17 +1372,20 @@ async function crearMaterial(){
  try{await mcRequest("",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({tipo,nombre,unidad,cantidad_critica,stock})});$("mcNombre").value="";await cargarMateriales();mcEstado("Material creado.")}catch(e){mcEstado("No se pudo crear: "+e.message)}
 }
 async function actualizarMaterial(){
- if(!isAdmin())return;
+ if(!isAdmin()||mcGuardando)return;
  const id=val("mcSeleccion"),stock=Number(val("mcNuevoStock")),cantidad_critica=Number(val("mcNuevoCritico"));
- if(!id||val("mcNuevoStock")===""||val("mcNuevoCritico")===""||!Number.isFinite(stock)||!Number.isFinite(cantidad_critica)||stock<0||cantidad_critica<0)return alert("Seleccione material e ingrese valores válidos.");
- try{await mcRequest("?id=eq."+encodeURIComponent(id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({stock,cantidad_critica,actualizado_en:new Date().toISOString()})});await cargarMateriales();mcEstado("Inventario actualizado.")}catch(e){mcEstado("No se pudo actualizar: "+e.message)}
+ const material=materialesCache.find(m=>String(m.id)===id);
+ if(!material||val("mcNuevoStock")===""||val("mcNuevoCritico")===""||![stock,cantidad_critica].every(Number.isFinite)||stock<0||cantidad_critica<0)return alert("Seleccione material e ingrese valores válidos.");
+ mcGuardando=true;
+ try{await rpc("ddh_pruebas_ajustar_inventario",{p_items:[{id:material.id,stock,cantidad_critica,expected_updated_at:material.actualizado_en}],p_tipo:"ajuste",p_observacion:"Ajuste manual de inventario"});await cargarMateriales();mcEstado("Inventario actualizado y ajuste registrado.")}
+ catch(e){mcEstado("No se confirmó el ajuste: "+e.message)}finally{mcGuardando=false}
 }
 function solicitarMateriales(){
  if(!isAdmin())return;
  const items=[...document.querySelectorAll(".mcCheck:checked")].map(c=>{const m=materialesCache.find(x=>String(x.id)===c.dataset.id);const n=Number(document.querySelector('.mcPedido[data-id="'+c.dataset.id+'"]').value);return {m,n}}).filter(x=>x.m);
  if(!items.length)return alert("Marque al menos un material.");
  if(items.some(x=>!Number.isFinite(x.n)||x.n<=0))return alert("Indique cantidades mayores a cero.");
- const comprador=localStorage.getItem("ddh_para_materiales")||"";const cc=localStorage.getItem("ddh_cc_materiales")||"";if(!comprador.trim())return alert("Configure los destinatarios en Configuración de correo → Solicitud de materiales críticos.");
+ const comprador=val("cParaMateriales");const cc=val("cCCMateriales");if(!comprador.trim())return alert("Configure los destinatarios en Configuración de correo → Solicitud de materiales críticos.");
  const emails=x=>x.split(/[;,\s]+/).map(t=>t.trim()).filter(Boolean);
  if([...emails(comprador),...emails(cc)].some(x=>!/^\S+@\S+\.\S+$/.test(x)))return alert("Revise los correos configurados para materiales.");
  const body="Estimados:\n\nSolicito gestionar la compra de los siguientes materiales críticos:\n\n"+items.map((x,i)=>(i+1)+". "+x.m.tipo+" / "+x.m.nombre+"\nCantidad solicitada: "+x.n+" "+x.m.unidad+"\nStock actual: "+x.m.stock+" | Cantidad crítica: "+x.m.cantidad_critica).join("\n\n")+"\n\nFavor confirmar disponibilidad y plazo de entrega.\n\nSaludos.";
@@ -1423,6 +1467,7 @@ async function enterApp(){
  if(!user.email_confirmed_at)return lockApp('Confirma tu correo corporativo antes de ingresar.');
  authSession.user=user;authProfile=await profileFetch();
  if(!authProfile||authProfile.status!=='approved')return lockApp(authProfile?.status==='disabled'?'Tu cuenta está desactivada. Contacta al administrador.':'Cuenta pendiente de aprobación del administrador.');
+ await cargarConfigCorreo();
  $('authScreen').hidden=true;$('appShell').hidden=false;$('sessionEmail').textContent=user.email;
  $('adminToggle').hidden=authProfile.role!=='admin';applyAdminVisibility();
  }catch(e){lockApp('No se pudo validar tu acceso: '+e.message)}
