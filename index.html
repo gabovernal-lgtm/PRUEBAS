@@ -479,13 +479,37 @@ async function cargarConfigCorreo(){
  try{const rows=await correoConfigRequest();if(rows.length){aplicarCorreoConfig(rows[0].destinatarios);localStorage.setItem(key,JSON.stringify(rows[0].destinatarios))}}
  catch(e){setStatus("Se cargó la configuración local. "+e.message)}
 }
+function normalizarDestinatarios(texto){
+ const partes=[];let actual="",comillas=false,angulo=false;
+ for(const c of String(texto||"").trim()){
+  if(c==='"'){comillas=!comillas;actual+=c;continue}
+  if(!comillas&&c==="<"){if(angulo)throw new Error("Formato de correo inválido.");angulo=true}
+  if(!comillas&&c===">"){if(!angulo)throw new Error("Formato de correo inválido.");angulo=false}
+  if(!comillas&&!angulo&&(c===";"||c===","||c==="\n"||c==="\r")){if(actual.trim())partes.push(actual.trim());actual=""}else actual+=c;
+ }
+ if(comillas||angulo)throw new Error("Revise las comillas o los signos < > del destinatario.");
+ if(actual.trim())partes.push(actual.trim());
+ const correos=[];
+ for(const parte of partes){
+  const conNombre=parte.match(/^[^<>]*<([^<>]+)>$/);
+  const candidatos=conNombre?[conNombre[1].trim()]:parte.split(/\s+/).filter(Boolean);
+  for(const correo of candidatos){
+   if(!/^[^\s@<>"(),;:]+@[^\s@<>"(),;:]+\.[^\s@<>"(),;:]+$/.test(correo))throw new Error("Dirección inválida: "+correo);
+   const limpio=correo.toLowerCase();if(!correos.includes(limpio))correos.push(limpio);
+  }
+ }
+ return correos.join("; ");
+}
 let correoConfigGuardando=false;
 async function guardarConfig(){
  if(!authProfile||correoConfigGuardando)return;
- const datos=Object.fromEntries(Object.keys(CORREO_CAMPOS).map(id=>[id,val(id)]));
- if(Object.values(datos).some(v=>v.split(/[;,\s]+/).filter(Boolean).some(x=>!/^\S+@\S+\.\S+$/.test(x))))return alert("Revise los correos: separe las direcciones con ; o coma.");
+ const datos={};
+ for(const id of Object.keys(CORREO_CAMPOS)){
+  try{datos[id]=normalizarDestinatarios(val(id))}
+  catch(e){const campo=$(id);const etiqueta=document.querySelector('label[for="'+id+'"]')?.textContent||campo.previousElementSibling?.textContent||id;alert(etiqueta+" "+e.message+" Puede pegar destinatarios desde Outlook o separar correos con ; o coma.");campo.focus();return}
+ }
  correoConfigGuardando=true;
- try{await correoConfigRequest("POST",{user_id:authSession.user.id,destinatarios:datos,updated_at:new Date().toISOString()});localStorage.setItem(correoConfigKey(),JSON.stringify(datos));setStatus("Configuración guardada en su cuenta. Disponible al ingresar en PRUEBAS desde otro dispositivo.")}
+ try{await correoConfigRequest("POST",{user_id:authSession.user.id,destinatarios:datos,updated_at:new Date().toISOString()});localStorage.setItem(correoConfigKey(),JSON.stringify(datos));aplicarCorreoConfig(datos);setStatus("Configuración guardada en su cuenta. Disponible al ingresar en PRUEBAS desde otro dispositivo.")}
  catch(e){setStatus(e.message+" Los cambios no se guardaron. Intente nuevamente.");alert("No se guardó la configuración. Revise la conexión e intente nuevamente.")}
  finally{correoConfigGuardando=false}
 }
