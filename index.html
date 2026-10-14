@@ -1637,9 +1637,12 @@ async function hdExportar(){
   for(const row of hdResumenEquipos(rows))summary.addRow(row);
   const total=hdTotales(rows);summary.addRow(['TOTAL',total.cobrar,total.pendiente]);summary.lastRow.font={bold:true};
   for(let i=6;i<=summary.rowCount;i++){for(const [col,color] of [[2,red],[3,yellow]]){const c=summary.getCell(i,col);c.fill={type:'pattern',pattern:'solid',fgColor:{argb:color}};c.numFmt='0.00'}}
-  const sh=build('Detalle',['Fecha','Equipo','Turno','Motivo','Horas','Estatus','Observación','Registrado por'],[13,14,9,36,12,16,65,33]);
-  for(const r of rows){const row=sh.addRow([r.fecha,r.equipo,r.turno,r.motivo,Number(r.horas),r.estatus,r.observacion||'',r.cuenta_usuario||'']);row.eachCell({includeEmpty:true},c=>{c.fill={type:'pattern',pattern:'solid',fgColor:{argb:r.estatus==='Cobrar'?red:yellow}};c.alignment={vertical:'top',wrapText:true}});row.getCell(5).numFmt='0.00'}
+  for(const [equipo] of hdResumenEquipos(rows)){
+  const sh=build(equipo,['Fecha','Equipo','Turno','Motivo','Horas','Estatus','Observación','Registrado por'],[13,14,9,36,12,16,65,33]);
+  sh.getCell('A2').value=hdPeriodo({...f,equipo});
+  for(const r of rows.filter(r=>r.equipo===equipo)){const row=sh.addRow([r.fecha,r.equipo,r.turno,r.motivo,Number(r.horas),r.estatus,r.observacion||'',r.cuenta_usuario||'']);row.eachCell({includeEmpty:true},c=>{c.fill={type:'pattern',pattern:'solid',fgColor:{argb:r.estatus==='Cobrar'?red:yellow}};c.alignment={vertical:'top',wrapText:true}});row.getCell(5).numFmt='0.00'}
   sh.autoFilter={from:'A5',to:{row:sh.rowCount,column:8}};
+  }
   const buffer=await wb.xlsx.writeBuffer(),url=URL.createObjectURL(new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));const a=document.createElement('a');a.href=url;a.download='HORAS_DESCUENTO_'+hdFechaActual()+'.xlsx';a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
  }catch(e){alert('No se pudo exportar: '+e.message)}finally{button.disabled=!hdRegistros.length}
 }
