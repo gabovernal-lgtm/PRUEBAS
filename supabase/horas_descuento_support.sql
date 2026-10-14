@@ -7,7 +7,7 @@ create table public.ddh_pruebas_horas_descuento (
  motivo text not null check (motivo in ('Mantención Preventiva','Reparación fuera de plan','Espera de accesos cliente','Espera por condición climática','Espera de instrucciones','Espera de conductor','Espera de equipo de apoyo','Espera de Mecánico','Espera por personal','Espera por tronadura','Espera de agua','Espera de combustible','Espera de medición','Medición','Otra')),
  horas numeric not null check(horas>0 and horas<=24 and horas=round(horas,2)),
  estatus text not null default 'Pendiente' check(estatus in ('Cobrar','Pendiente')),
- observacion text not null default '' check(length(observacion)<=2000) check(motivo<>'Otra' or length(trim(observacion))>0) check(motivo<>'Otra' or length(trim(observacion))>0) check(motivo<>'Otra' or length(trim(observacion))>0) check(motivo<>'Otra' or length(trim(observacion))>0),
+ observacion text not null default '' check(length(observacion)<=2000) check(motivo<>'Otra' or length(trim(observacion))>0) check(motivo<>'Otra' or length(trim(observacion))>0) check(motivo<>'Otra' or length(trim(observacion))>0) check(motivo<>'Otra' or length(trim(observacion))>0) check(motivo<>'Otra' or length(trim(observacion))>0) check(motivo<>'Otra' or length(trim(observacion))>0),
  created_by uuid not null default auth.uid() references auth.users(id),
  cuenta_usuario text not null default (auth.jwt()->>'email'),
  created_at timestamptz not null default now(),
@@ -90,3 +90,8 @@ begin
 end $$;
 revoke all on function public.ddh_pruebas_admin_historial(text,text,timestamptz,text,jsonb) from public,anon;
 grant execute on function public.ddh_pruebas_admin_historial(text,text,timestamptz,text,jsonb) to authenticated;
+
+-- Acceso exclusivo para administradores (actualización).
+alter policy hd_read on public.ddh_pruebas_horas_descuento using ((select public.ddh_is_admin()));
+alter policy hd_insert on public.ddh_pruebas_horas_descuento with check ((select public.ddh_is_admin()) and created_by=(select auth.uid()));
+alter policy hd_update on public.ddh_pruebas_horas_descuento using ((select public.ddh_is_admin())) with check ((select public.ddh_is_admin()));

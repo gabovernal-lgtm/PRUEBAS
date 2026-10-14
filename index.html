@@ -124,7 +124,7 @@ body{background:linear-gradient(#fff,#f6faff)!important}
 <button data-admin-only hidden id="nav-proyeccion" onclick="showView('proyeccion')">Proyección equipos</button>
 <button data-admin-only hidden id="nav-materiales" onclick="showView('materiales')">Materiales críticos</button>
 <button id="nav-coronas" onclick="showView('coronas')">Rebaje de Coronas</button>
-<button id="nav-horas" onclick="showView('horas')">Horas a descuento</button>
+<button data-admin-only hidden id="nav-horas" onclick="showView('horas')">Horas a descuento</button>
 <button id="nav-historial" onclick="showView('historial')">Historial</button>
 <button id="nav-config" onclick="showView('config')">Configuración de correo</button>
 </nav>
@@ -134,7 +134,7 @@ body{background:linear-gradient(#fff,#f6faff)!important}
 <div class="panel">
 <h2>Menú principal</h2>
 <div class="note" style="margin-bottom:16px">Seleccione una función para comenzar.</div>
-<div class="home-grid"><button class="home-card" onclick="showView('horas')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/></svg></span><strong>Horas a descuento</strong><span>Registro, revisión e historial por equipo.</span></button>
+<div class="home-grid">
 <button class="home-card" onclick="showView('traslado')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v10H3z M14 10h4l3 3v4h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg></span><strong>Traslado de equipo</strong><span>Solicitud, controles, PDF y correo.</span></button>
 <button class="home-card" onclick="showView('srm')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3l-3 4 3 4-3 4 7 6 7-6-3-4 3-4-3-4-4 3-4-3z"/><circle cx="12" cy="12" r="3"/><path d="M8 7l8 10M16 7L8 17"/></svg></span><strong>Tricono SRM</strong><span>Preparación de correo SRM.</span></button>
 <button class="home-card" onclick="showView('devolucion')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21l4-18 4 18M6 21h12M9 8h6M8 13h8M7 18h10M12 3v18"/></svg></span><strong>Devolución de plataforma</strong><span>Verificación, fotografías, PDF y correo.</span></button>
@@ -146,6 +146,7 @@ body{background:linear-gradient(#fff,#f6faff)!important}
 <button class="home-card" onclick="showView('coronas')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6h14l-2 14H7zM5 6V3h3v3m3 0V2h3v4m3 0V3h3v3M7 11h10M8 15h8M9 20h6"/></svg></span><strong>Rebaje de Coronas</strong><span>Guardar registro y preparar correo sin PDF.</span></button>
 
 
+<button data-admin-only hidden class="home-card" onclick="showView('horas')"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/></svg></span><strong>Horas a descuento</strong><span>Registro, revisión e historial por equipo.</span></button>
 </div>
 </div>
 </section>
@@ -458,7 +459,7 @@ const EQUIPOS_CRONOS=["CH1-83", "CH1-133", "CH1-135", "CH1-140", "CH1-141", "CH1
 function isAdmin(){return authProfile?.role==='admin'&&authProfile?.status==='approved'}
 function applyAdminVisibility(){document.querySelectorAll('[data-admin-only]').forEach(e=>e.hidden=!isAdmin())}
 function showView(v){
-if(['minuta','proyeccion','materiales'].includes(v)&&!isAdmin()){alert('Acceso exclusivo para administradores');return}
+if(['minuta','proyeccion','materiales','horas'].includes(v)&&!isAdmin()){alert('Acceso exclusivo para administradores');return}
 
 const views=["home","traslado","srm","devolucion","minuta","reparacion","flota","proyeccion","materiales","coronas","horas","historial","config"];
 views.forEach(x=>$("view-"+x)?.classList.toggle("hidden",x!==v));
@@ -1556,6 +1557,7 @@ function hdInit(){
 }
 function hdLimpiarSesion(){hdConsultaId++;hdRegistros=[];hdPendienteEnvio=null;hdFiltroAplicado=null;$('hdForm').reset();$('hdFecha').value=hdFechaActual();$('hdTabla').textContent='';$('hdPorEquipo').textContent='';$('hdResumen').textContent='';$('hdConsulta').textContent='';$('hdMensaje').textContent='Complete los datos para guardar un registro.';$('hdPDF').disabled=$('hdExportar').disabled=true}
 async function hdRequest(query,options={}){
+ if(!isAdmin())throw new Error('Acceso exclusivo para administradores');
  const r=await fetch(AUTH_PROJECT_URL+'/rest/v1/ddh_pruebas_horas_descuento'+query,{...options,headers:{apikey:AUTH_PUBLIC_KEY,Authorization:'Bearer '+await validToken(),'Content-Type':'application/json',...(options.headers||{})}});
  const text=await r.text();let data;try{data=text?JSON.parse(text):null}catch(e){data=null}
  if(!r.ok){const error=new Error(data?.message||'No se pudo completar la operación ('+r.status+').');error.code=data?.code;throw error}

@@ -2,9 +2,9 @@
 
 Registro persistente por fecha, equipo, turno, motivo, horas, estatus y observación. 15 motivos; Medición y Espera de medición son distintos. Otra requiere observación. Cobrar significa descuento confirmado (rojo); Pendiente requiere revisión (amarillo).
 
-Filtros por equipo, fechas, turno y estatus. Exportación Excel y PDF con resumen separado por estatus y detalle. No se importaron registros del Excel de referencia.
+Filtros por equipo, fechas, turno y estatus. Exportación Excel con resumen y una pestaña por equipo. PDF con resumen separado por estatus y detalle. No se importaron registros del Excel de referencia.
 
-Administradores pueden editar/eliminar horas, historial_operaciones y rebajas_coronas. RPC con validación de versión y auditoría transaccional. Usuarios aprobados pueden registrar horas y cambiar el estatus de registros propios. Solo administradores pueden cambiar otros campos o eliminar.
+Administradores pueden editar/eliminar horas, historial_operaciones y rebajas_coronas. RPC con validación de versión y auditoría transaccional. Horas a descuento es exclusivo para administradores: consulta, registro, cambios, eliminación y exportación. La tarjeta está al final del menú, oculta para otros perfiles. RLS bloquea el acceso directo a los datos para no administradores.
 
 ATENCIÓN: los historiales anteriores son compartidos por las aplicaciones oficial y PRUEBAS; corregirlos afecta ambas. La tabla de horas es exclusiva ddh_pruebas_horas_descuento. No se modificó código del repositorio oficial ni movimientos de inventario.
 
