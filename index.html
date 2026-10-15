@@ -170,7 +170,41 @@ input:focus,textarea:focus,select:focus{outline:2px solid #b7d6d3!important;outl
 }
 
 </style>
-<style>#view-pa textarea,#view-pa input:not([type=checkbox]),#view-pa select{width:100%;box-sizing:border-box}#view-pa textarea,#view-pa details input{border:1px solid #cbd8d7;border-radius:8px;background:#fafcfb;padding:11px 12px;font:14px Arial;color:#203b45}#view-pa textarea{min-height:130px;line-height:1.5}#view-pa label{display:block;margin:12px 0 6px}#view-pa [type=checkbox]{width:auto}#view-pa .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}#view-pa summary{cursor:pointer;font-weight:bold}#view-pa button{margin-top:6px}</style></head>
+<style>#view-pa textarea,#view-pa input:not([type=checkbox]),#view-pa select{width:100%;box-sizing:border-box}#view-pa textarea,#view-pa details input{border:1px solid #cbd8d7;border-radius:8px;background:#fafcfb;padding:11px 12px;font:14px Arial;color:#203b45}#view-pa textarea{min-height:130px;line-height:1.5}#view-pa label{display:block;margin:12px 0 6px}#view-pa [type=checkbox]{width:auto}#view-pa .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}#view-pa summary{cursor:pointer;font-weight:bold}#view-pa button{margin-top:6px}</style><style id="ddh-color-refinement">
+@media screen {
+:root{--blue:#203f68;--blue2:#173252;--soft:#f8f7f3;--line:#e4e4dd;--ink:#25364a;--muted:#707b88;--yellow:#efc64d}
+html,body{background:#f8f7f3!important;color:#25364a!important}
+#authTopbar{background:#203b5d!important;color:#e5ebf2!important}
+.header{background:#fff!important;box-shadow:0 3px 20px #273c5006!important}
+.brand-center h1{color:#203b5d!important}.brand-center p{color:#8a773e!important;letter-spacing:2px!important}
+.brand-logo{background:#fff!important}.brand-center::before{box-shadow:0 4px 12px #1d385c16!important}
+.brand-accent{height:5px!important;background:linear-gradient(90deg,#efc64d 0 72%,#203b5d 72% 100%)!important}
+.header-shortcuts button,.header-shortcuts button:last-child{background:#fff9e7!important;border-color:#e7d8a2!important;color:#58491e!important}.header-shortcuts button:hover{background:#fff0bb!important}
+.panel{border-color:#e5e6df!important;box-shadow:0 6px 24px #243b4a04!important}
+.panel h2,.section-title{color:#203b5d!important}
+#view-home>.panel:first-child h2{font-size:27px!important;color:#203b5d!important;text-transform:none!important;letter-spacing:-.8px!important;line-height:1.2!important;margin:0 0 8px!important;padding:5px 0 0!important}
+#view-home>.panel:first-child>.note{color:#737c85!important}
+.home-card{background:#fff!important;border-color:#e3e5e4!important;box-shadow:0 3px 14px #243b4a03!important}
+.home-card strong{color:#263e58!important}.home-card span:not(.ico){color:#707d88!important}
+.home-card:after{color:#bc9a36!important}
+.home-card .ico{background:#fff4d2!important;color:#94701a!important;border-radius:12px!important}
+.home-card[onclick="showView('srm')"] .ico,.home-card[onclick="showView('flota')"] .ico{background:#eaf0f9!important;color:#4e6d9b!important}
+.home-card[onclick="showView('devolucion')"] .ico,.home-card[onclick="showView('materiales')"] .ico{background:#eaf2ec!important;color:#557d65!important}
+.home-card[onclick="showView('minuta')"] .ico,.home-card[onclick="showView('horas')"] .ico{background:#f0ecf7!important;color:#7b6794!important}
+.home-card[onclick="showView('reparacion')"] .ico,.home-card[onclick="showView('coronas')"] .ico{background:#fbede5!important;color:#ac7352!important}
+.home-card:hover,.home-card:focus-visible{background:#fffdf7!important;border-color:#d9bb5e!important;box-shadow:0 7px 20px #8c773b10!important}
+.home-card .ico svg{stroke-width:1.65!important}
+.btn-blue,.auth-card button{background:#efc64d!important;color:#3e351d!important;border:1px solid #e0b943!important}.btn-blue:hover{background:#f5d368!important}.btn-light{background:#edf1f7!important;color:#294568!important}.btn-white{border-color:#d9dfe6!important;color:#294568!important}
+input:focus,textarea:focus,select:focus{outline-color:#f0df9e!important;border-color:#c5a74a!important}
+.date-box,.ocr-box{background:#fffbef!important;border-color:#ede1b5!important}.photo-box{background:#f6f7f9!important;border-color:#e0e5eb!important}
+.history-table th,.dev-table th,.projection-table th{background:#f4f1e6!important;color:#655b3c!important;border-color:#e8e1ce!important}.history-table td,.dev-table td,.projection-table td{border-color:#e8e9e6!important}.history-table tbody tr:hover{background:#fffdf4!important}
+.pill{background:#edf1f8;color:#3b587c}.status{background:#fffae9!important;border-color:#eee1b2!important;color:#6b5c31!important}
+#view-materiales .mc-menu button.selected{background:#fff3c9!important;border-color:#d8bb5e!important;color:#6c571c!important}
+.auth-card{border-top-color:#efc64d!important}#authScreen{background:radial-gradient(ellipse at 10% 90%,#465f7f,transparent 70%),#1d3554!important}.auth-card h2{color:#203b5d!important}
+@media(max-width:600px){#view-home>.panel:first-child h2{font-size:24px!important}.brand-center p{letter-spacing:1px!important}.header-shortcuts button,.header-shortcuts button:last-child{background:#fff7de!important}}
+}
+
+</style></head>
 <body>
 <section id="authScreen"><div class="auth-card"><h2>OPERACIONES DDH</h2><p>Acceso de personal Geotec autorizado</p>
 <form id="authForm"><input id="authEmail" type="email" placeholder="Correo @geotec.cl" autocomplete="username" required><input id="authPassword" type="password" placeholder="Contraseña" autocomplete="current-password" minlength="10" required>
