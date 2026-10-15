@@ -1,4 +1,4 @@
-const CACHE='ddh-pruebas-identidad-moderna-v1';
+const CACHE='ddh-pruebas-primera-alerta-v1';
 const ASSETS=['./','./index.html','./manifest.webmanifest','./icon-ddh-realista-192.png','./icon-ddh-realista-512.png','./config.js'];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('ddh-pruebas-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
