@@ -441,6 +441,7 @@ input:focus,textarea:focus,select:focus{outline-color:#f0df9e!important;border-c
 <label for="hdEquipo">Equipo:</label><select id="hdEquipo" required><option value="">Seleccione equipo</option></select>
 <label for="hdTurno">Turno:</label><select id="hdTurno" required><option value="">Seleccione turno</option><option>A</option><option>B</option></select>
 <label for="hdMotivo">Motivo:</label><select id="hdMotivo" required><option value="">Seleccione motivo</option></select>
+<label id="hdMotivoOtroLabel" for="hdMotivoOtro" hidden>Especifique el motivo:</label><input id="hdMotivoOtro" type="text" maxlength="120" placeholder="Escriba el motivo" hidden disabled>
 <label for="hdHoras">Horas:</label><input id="hdHoras" type="text" inputmode="decimal" placeholder="Ej.: 2,5" required maxlength="8">
 <label for="hdEstatus">Estatus:</label><select id="hdEstatus" required><option value="Pendiente">Pendiente</option><option value="Cobrar">Cobrar</option></select>
 <label for="hdObservacion">Observación:</label><textarea id="hdObservacion" maxlength="2000" placeholder="Detalle adicional (opcional)"></textarea>
@@ -1656,15 +1657,26 @@ async function initAuth(){
 }
 
 // Registro de horas: módulo exclusivo de PRUEBAS.
-const HD_MOTIVOS=["Mantención Preventiva","Reparación fuera de plan","Espera de accesos cliente","Espera por condición climática","Espera de instrucciones","Espera de conductor","Espera de equipo de apoyo","Espera de Mecánico","Espera por personal","Espera por tronadura","Espera de agua","Espera de combustible","Espera de medición","Medición","Otra"];
+const HD_MOTIVOS=["Mantención Preventiva","Reparación fuera de plan","Espera de accesos cliente","Espera por condición climática","Espera de instrucciones","Espera de conductor","Espera de equipo de apoyo","Espera de Mecánico","Espera por personal","Espera por tronadura","Espera de agua","Espera de combustible","Espera de medición","Medición","REVISIÓN TÉCNICA","Otra"];
 let hdRegistros=[],hdConsultaId=0,hdPendienteEnvio=null,hdGuardando=false,hdFiltroAplicado=null;
 const hdNumero=n=>Number(n).toLocaleString('es-CL',{maximumFractionDigits:2});
 function hdFechaActual(){return new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Santiago'}).format(new Date())}
+function hdMostrarMotivoOtro(select,input,label,required=true){
+ const visible=select.value==='Otra';
+ label.hidden=input.hidden=input.disabled=!visible;
+ input.required=visible&&required;
+}
+function hdMotivoVisible(r){return r.motivo==='Otra'&&r.motivo_otro?r.motivo_otro:r.motivo}
 function hdInit(){
  const opciones=EQUIPOS_CRONOS.map(e=>`<option value="${esc(e)}">${esc(e)}</option>`).join('');
  $('hdEquipo').innerHTML+=opciones;$('hdFiltroEquipo').innerHTML+=opciones;
  $('hdMotivo').innerHTML+=HD_MOTIVOS.map(m=>`<option>${esc(m)}</option>`).join('');
  $('hdFecha').value=hdFechaActual();
+ const motivo=$('hdMotivo'),otro=$('hdMotivoOtro'),otroLabel=$('hdMotivoOtroLabel');
+ const syncMotivo=()=>hdMostrarMotivoOtro(motivo,otro,otroLabel);
+ motivo.addEventListener('change',syncMotivo);
+ $('hdForm').addEventListener('reset',()=>queueMicrotask(syncMotivo));
+ syncMotivo();
  $('hdForm').addEventListener('submit',hdGuardar);
  $('hdFiltros').addEventListener('submit',e=>{e.preventDefault();hdCargar()});
  $('hdTodos').addEventListener('click',()=>{$('hdFiltros').reset();hdCargar()});
@@ -1684,8 +1696,9 @@ function hdDatos(){
  if(!/^\d{4}-\d{2}-\d{2}$/.test(fecha)||!EQUIPOS_CRONOS.includes(equipo)||!['A','B'].includes(turno)||!HD_MOTIVOS.includes(motivo)||!['Cobrar','Pendiente'].includes(estatus))throw new Error('Complete fecha, equipo, turno, motivo y estatus.');
  if(!/^\d+(?:[.,]\d{1,2})?$/.test(texto))throw new Error('Ingrese las horas como número, por ejemplo 2,5 (máximo dos decimales).');
  const horas=Number(texto.replace(',','.'));if(horas<=0||horas>24)throw new Error('Ingrese una cantidad de horas mayor que 0 y no superior a 24.');
- if(motivo==='Otra'&&!val('hdObservacion'))throw new Error('Describa el motivo en Observación.');
- return {fecha,equipo,turno,motivo,horas,estatus,observacion:val('hdObservacion')};
+ const motivo_otro=motivo==='Otra'?val('hdMotivoOtro'):null;
+ if(motivo==='Otra'&&(!motivo_otro||motivo_otro.length>120))throw new Error('Escriba el motivo en el campo Especifique el motivo (máximo 120 caracteres).');
+ return {fecha,equipo,turno,motivo,motivo_otro,horas,estatus,observacion:val('hdObservacion')};
 }
 async function hdGuardar(event){
  event.preventDefault();if(hdGuardando||!authSession?.user?.id)return;
@@ -1699,7 +1712,7 @@ async function hdGuardar(event){
   catch(e){if(e.code!=='23505')throw e;const existing=await hdRequest('?id=eq.'+encodeURIComponent(id)+'&select=*');if(!existing?.length)throw e;saved=existing}
   if(!saved?.length)throw new Error('No se recibió confirmación del guardado. Reintente.');
   if(authSession?.user?.id!==owner)return;
-  hdPendienteEnvio=null;$('hdHoras').value='';$('hdObservacion').value='';
+  hdPendienteEnvio=null;$('hdHoras').value='';$('hdObservacion').value='';$('hdMotivoOtro').value='';
   $('hdMensaje').textContent='Registro guardado. '+datos.equipo+' · '+fechaCorta(datos.fecha)+' · Turno '+datos.turno+' · '+hdNumero(datos.horas)+' h · '+datos.estatus+'.';
   await hdCargar();
  }catch(e){if(authSession?.user?.id===owner)$('hdMensaje').textContent='No se confirmó el guardado: '+e.message+' Sus datos siguen en el formulario; puede reintentar.'}
@@ -1708,7 +1721,7 @@ async function hdGuardar(event){
 function hdLeerFiltros(){return {equipo:val('hdFiltroEquipo'),desde:val('hdDesde'),hasta:val('hdHasta'),turno:val('hdFiltroTurno'),estatus:val('hdFiltroEstatus')}}
 function hdQuery(f){
  if(f.desde&&f.hasta&&f.desde>f.hasta)throw new Error('La fecha Desde debe ser anterior o igual a Hasta.');
- const p=new URLSearchParams({select:'id,fecha,equipo,turno,motivo,horas,estatus,observacion,created_by,cuenta_usuario,created_at,updated_at',order:'fecha.desc,created_at.desc,id.desc'});
+ const p=new URLSearchParams({select:'id,fecha,equipo,turno,motivo,motivo_otro,horas,estatus,observacion,created_by,cuenta_usuario,created_at,updated_at',order:'fecha.desc,created_at.desc,id.desc'});
  if(f.equipo)p.append('equipo','eq.'+f.equipo);if(f.desde)p.append('fecha','gte.'+f.desde);if(f.hasta)p.append('fecha','lte.'+f.hasta);if(f.turno)p.append('turno','eq.'+f.turno);if(f.estatus)p.append('estatus','eq.'+f.estatus);
  return p;
 }
@@ -1728,7 +1741,7 @@ function hdRender(){
  if(!hdRegistros.length){$('hdTabla').textContent='No hay registros para los filtros seleccionados.';return}
  const equipos=[...new Set(hdRegistros.map(r=>r.equipo))].sort((a,b)=>a.localeCompare(b,'es',{numeric:true}));
  $('hdPorEquipo').innerHTML='<table class="hd-totales"><caption>Resumen por equipo del período consultado</caption><thead><tr><th>Equipo</th><th>Cobrar (h)</th><th>Pendiente (h)</th></tr></thead><tbody>'+equipos.map(eq=>{const v=hdTotales(hdRegistros.filter(r=>r.equipo===eq));return `<tr><td>${esc(eq)}</td><td class="hd-cobrar">${hdNumero(v.cobrar)}</td><td class="hd-pendiente">${hdNumero(v.pendiente)}</td></tr>`}).join('')+'</tbody></table>';
- $('hdTabla').innerHTML='<table class="history-table"><thead><tr>'+['Fecha','Equipo','Turno','Motivo','Horas','Estatus','Observación','Registrado por','Revisión'].map(v=>'<th>'+v+'</th>').join('')+'</tr></thead><tbody>'+hdRegistros.map((r,i)=>`<tr><td>${esc(fechaCorta(r.fecha))}</td><td>${esc(r.equipo)}</td><td>${esc(r.turno)}</td><td>${esc(r.motivo)}</td><td>${hdNumero(r.horas)}</td><td><span class="pill ${r.estatus==='Cobrar'?'hd-cobrar':'hd-pendiente'}">${esc(r.estatus)}</span></td><td style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(r.observacion)}</td><td style="overflow-wrap:anywhere">${esc(r.cuenta_usuario)}</td><td>${(isAdmin()||r.created_by===authSession.user.id)?`<select class="table-input" aria-label="Estatus de registro ${i+1}" id="hdEstado${i}"><option${r.estatus==='Pendiente'?' selected':''}>Pendiente</option><option${r.estatus==='Cobrar'?' selected':''}>Cobrar</option></select><button class="btn btn-light" data-hd-revisar="${i}" style="margin-top:6px">Guardar estatus</button>`:'—'}${ahBotones('ddh_pruebas_horas_descuento',r)}</td></tr>`).join('')+'</tbody></table>';
+ $('hdTabla').innerHTML='<table class="history-table"><thead><tr>'+['Fecha','Equipo','Turno','Motivo','Horas','Estatus','Observación','Registrado por','Revisión'].map(v=>'<th>'+v+'</th>').join('')+'</tr></thead><tbody>'+hdRegistros.map((r,i)=>`<tr><td>${esc(fechaCorta(r.fecha))}</td><td>${esc(r.equipo)}</td><td>${esc(r.turno)}</td><td>${esc(hdMotivoVisible(r))}</td><td>${hdNumero(r.horas)}</td><td><span class="pill ${r.estatus==='Cobrar'?'hd-cobrar':'hd-pendiente'}">${esc(r.estatus)}</span></td><td style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(r.observacion)}</td><td style="overflow-wrap:anywhere">${esc(r.cuenta_usuario)}</td><td>${(isAdmin()||r.created_by===authSession.user.id)?`<select class="table-input" aria-label="Estatus de registro ${i+1}" id="hdEstado${i}"><option${r.estatus==='Pendiente'?' selected':''}>Pendiente</option><option${r.estatus==='Cobrar'?' selected':''}>Cobrar</option></select><button class="btn btn-light" data-hd-revisar="${i}" style="margin-top:6px">Guardar estatus</button>`:'—'}${ahBotones('ddh_pruebas_horas_descuento',r)}</td></tr>`).join('')+'</tbody></table>';
  $('hdTabla').querySelectorAll('[data-hd-revisar]').forEach(button=>button.addEventListener('click',()=>hdRevisar(Number(button.dataset.hdRevisar),button)));
 }
 async function hdRevisar(i,button){
@@ -1758,7 +1771,7 @@ async function hdExportar(){
   for(const [equipo] of hdResumenEquipos(rows)){
   const sh=build(equipo,['Fecha','Equipo','Turno','Motivo','Horas','Estatus','Observación','Registrado por'],[13,14,9,36,12,16,65,33]);
   sh.getCell('A2').value=hdPeriodo({...f,equipo});
-  for(const r of rows.filter(r=>r.equipo===equipo)){const row=sh.addRow([r.fecha,r.equipo,r.turno,r.motivo,Number(r.horas),r.estatus,r.observacion||'',r.cuenta_usuario||'']);row.eachCell({includeEmpty:true},c=>{c.fill={type:'pattern',pattern:'solid',fgColor:{argb:r.estatus==='Cobrar'?red:yellow}};c.alignment={vertical:'top',wrapText:true}});row.getCell(5).numFmt='0.00'}
+  for(const r of rows.filter(r=>r.equipo===equipo)){const row=sh.addRow([r.fecha,r.equipo,r.turno,hdMotivoVisible(r),Number(r.horas),r.estatus,r.observacion||'',r.cuenta_usuario||'']);row.eachCell({includeEmpty:true},c=>{c.fill={type:'pattern',pattern:'solid',fgColor:{argb:r.estatus==='Cobrar'?red:yellow}};c.alignment={vertical:'top',wrapText:true}});row.getCell(5).numFmt='0.00'}
   sh.autoFilter={from:'A5',to:{row:sh.rowCount,column:8}};
   }
   const buffer=await wb.xlsx.writeBuffer(),url=URL.createObjectURL(new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));const a=document.createElement('a');a.href=url;a.download='HORAS_DESCUENTO_'+hdFechaActual()+'.xlsx';a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
@@ -1772,13 +1785,13 @@ function hdExportarPDF(){
  const common={theme:'grid',margin:{left:12,right:12,top:41,bottom:15},styles:{fontSize:8,cellPadding:2,overflow:'linebreak'},headStyles:{fillColor:[18,60,105]},didDrawPage:()=>{header();doc.setFontSize(8);doc.setTextColor(70,70,70);doc.text('Página '+doc.internal.getCurrentPageInfo().pageNumber,260,203)}};
  const summary=hdResumenEquipos(rows);const t=hdTotales(rows);summary.push(['TOTAL',t.cobrar,t.pendiente]);
  doc.autoTable({...common,startY:41,head:[['Equipo','Cobrar (h) — confirmado','Pendiente (h) — revisar']],body:summary.map(r=>[r[0],hdNumero(r[1]),hdNumero(r[2])]),didParseCell:data=>{if(data.section==='body'&&data.column.index>0)data.cell.styles.fillColor=data.column.index===1?red:yellow}});
- doc.addPage();doc.autoTable({...common,startY:41,head:[['Fecha','Equipo','Turno','Motivo','Horas','Estatus','Observación']],body:rows.map(r=>[fechaCorta(r.fecha),r.equipo,r.turno,r.motivo,hdNumero(r.horas),r.estatus,r.observacion||'']),columnStyles:{6:{cellWidth:85}},didParseCell:data=>{if(data.section==='body')data.cell.styles.fillColor=rows[data.row.index].estatus==='Cobrar'?red:yellow}});
+ doc.addPage();doc.autoTable({...common,startY:41,head:[['Fecha','Equipo','Turno','Motivo','Horas','Estatus','Observación']],body:rows.map(r=>[fechaCorta(r.fecha),r.equipo,r.turno,hdMotivoVisible(r),hdNumero(r.horas),r.estatus,r.observacion||'']),columnStyles:{6:{cellWidth:85}},didParseCell:data=>{if(data.section==='body')data.cell.styles.fillColor=rows[data.row.index].estatus==='Cobrar'?red:yellow}});
  doc.save('HORAS_DESCUENTO_'+hdFechaActual()+'.pdf');
 }
 
 let ahContext=null;
-const AH_LABELS={fecha:'Fecha de operación / solicitud',equipo:'Equipo',turno:'Turno',motivo:'Motivo',horas:'Horas',estatus:'Estatus',observacion:'Observación',pozo:'Pozo',sector_origen:'Sector de origen',sector_destino:'Sector de destino',sector:'Sector',supervisor:'Supervisor',jefe_faena:'Jefe de faena',detalle:'Detalle del historial',estado:'Estado',serie_corona:'Serie de corona',id_corona:'ID de corona',fondo_inicial:'Fondo inicial (m)',fondo_final:'Fondo final (m)',tipo_desgaste:'Tipo de desgaste',vida_util:'Vida útil',compromiso:'Compromiso',responsable:'Responsable',q:'Pregunta',c:'Respuesta',o:'Observación'};
-const AH_FIELDS={historial_operaciones:['fecha','equipo','pozo','sector_origen','sector_destino','sector','supervisor','jefe_faena','detalle','estado'],rebajas_coronas:['equipo','pozo','serie_corona','id_corona','fondo_inicial','fondo_final','tipo_desgaste','vida_util'],ddh_pruebas_horas_descuento:['fecha','equipo','turno','motivo','horas','estatus','observacion']};
+const AH_LABELS={fecha:'Fecha de operación / solicitud',equipo:'Equipo',turno:'Turno',motivo:'Motivo',motivo_otro:'Especifique el motivo',horas:'Horas',estatus:'Estatus',observacion:'Observación',pozo:'Pozo',sector_origen:'Sector de origen',sector_destino:'Sector de destino',sector:'Sector',supervisor:'Supervisor',jefe_faena:'Jefe de faena',detalle:'Detalle del historial',estado:'Estado',serie_corona:'Serie de corona',id_corona:'ID de corona',fondo_inicial:'Fondo inicial (m)',fondo_final:'Fondo final (m)',tipo_desgaste:'Tipo de desgaste',vida_util:'Vida útil',compromiso:'Compromiso',responsable:'Responsable',q:'Pregunta',c:'Respuesta',o:'Observación'};
+const AH_FIELDS={historial_operaciones:['fecha','equipo','pozo','sector_origen','sector_destino','sector','supervisor','jefe_faena','detalle','estado'],rebajas_coronas:['equipo','pozo','serie_corona','id_corona','fondo_inicial','fondo_final','tipo_desgaste','vida_util'],ddh_pruebas_horas_descuento:['fecha','equipo','turno','motivo','motivo_otro','horas','estatus','observacion']};
 function ahInit(){
  $('ahForm').addEventListener('submit',ahGuardar);$('ahCerrar').addEventListener('click',()=>{if(!ahContext?.busy){$('ahDialog').close();ahContext=null}});
  $('ahDialog').addEventListener('cancel',e=>{if(ahContext?.busy)e.preventDefault();else ahContext=null});
@@ -1801,6 +1814,16 @@ function ahAbrir(tabla,id){
   let options;if(tabla==='rebajas_coronas'&&key==='vida_util')options=['Con vida útil','Sin vida útil'];if(tabla==='ddh_pruebas_horas_descuento')options=key==='equipo'?EQUIPOS_CRONOS:key==='turno'?['A','B']:key==='motivo'?HD_MOTIVOS:key==='estatus'?['Cobrar','Pendiente']:undefined;
   ahInput(grid,[key],r[key]??'',key,options);
  }
+ if(tabla==='ddh_pruebas_horas_descuento'){
+  const motivo=ahContext.fields.find(f=>f.path[0]==='motivo').input;
+  const otro=ahContext.fields.find(f=>f.path[0]==='motivo_otro').input;
+  otro.maxLength=120;otro.rows=1;
+  const syncMotivo=()=>{
+   const legacy=r.motivo==='Otra'&&!r.motivo_otro;
+   hdMostrarMotivoOtro(motivo,otro,otro.parentElement,!legacy);
+  };
+  motivo.addEventListener('change',syncMotivo);syncMotivo();
+ }
  if(tabla==='historial_operaciones'&&r.datos&&typeof r.datos==='object'){
   const details=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Datos completos del formulario';details.append(summary);const inner=document.createElement('div');inner.className='ah-grid';details.append(inner);$('ahContenido').append(details);
   const walk=(obj,path)=>{for(const [key,value] of Object.entries(obj)){if(['cuenta_usuario','__proto__','constructor','prototype'].includes(key))continue;if(path.length===1&&((key==='compromisos'&&'mComp1' in obj)||(key==='verificaciones'&&'dCumple1' in obj)))continue;if(value!==null&&typeof value==='object')walk(value,[...path,key]);else ahInput(inner,[...path,key],value,key)}};walk(r.datos,['datos']);
@@ -1816,7 +1839,10 @@ function ahPayload(ctx){
  if(ctx.tabla==='historial_operaciones')ahSincronizar(r,changed);
  if(ctx.tabla==='ddh_pruebas_horas_descuento'){
   r.horas=Number(String(r.horas).replace(',','.'));if(!Number.isFinite(r.horas)||r.horas<=0||r.horas>24||Math.abs(r.horas*100-Math.round(r.horas*100))>1e-8)throw new Error('Ingrese horas entre 0 y 24, mayores que 0, con máximo dos decimales.');
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(r.fecha))throw new Error('Ingrese la fecha como AAAA-MM-DD.');if(r.motivo==='Otra'&&!r.observacion.trim())throw new Error('Describa el motivo en Observación.');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(r.fecha))throw new Error('Ingrese la fecha como AAAA-MM-DD.');
+  r.motivo_otro=r.motivo==='Otra'?(r.motivo_otro.trim()||null):null;
+  const legacy=ctx.record.motivo==='Otra'&&!ctx.record.motivo_otro&&r.observacion.trim();
+  if(r.motivo==='Otra'&&((!r.motivo_otro&&!legacy)||r.motivo_otro?.length>120))throw new Error('Escriba el motivo en el campo Especifique el motivo (máximo 120 caracteres).');
  }
  if(ctx.tabla==='rebajas_coronas'){
   for(const k of ['fondo_inicial','fondo_final'])r[k]=Number(String(r[k]).replace(',','.'));
