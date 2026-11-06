@@ -1736,8 +1736,14 @@ async function hdCargar(){
  }catch(e){if(requestId===hdConsultaId)$('hdConsulta').textContent='No se pudo consultar: '+e.message;return false}
 }
 function hdTotales(rows){const result={cobrar:0,pendiente:0};for(const r of rows){const key=r.estatus==='Cobrar'?'cobrar':'pendiente';result[key]+=Math.round(Number(r.horas)*100)}return {cobrar:result.cobrar/100,pendiente:result.pendiente/100}}
-function hdTurnosDescuento(rows){
- return new Set(rows.filter(r=>r.estatus==='Cobrar').map(r=>JSON.stringify([r.equipo,r.fecha,r.turno]))).size;
+function hdTotalesTurnos(rows){
+ const pendientes=new Set(),cobro=new Set(),total=new Set();
+ for(const r of rows){
+  const clave=JSON.stringify([r.equipo,r.fecha,r.turno]);
+  (r.estatus==='Cobrar'?cobro:pendientes).add(clave);
+  total.add(clave);
+ }
+ return [['Pendientes',pendientes.size],['A cobro',cobro.size],['Total',total.size]];
 }
 function hdRender(){
  const t=hdTotales(hdRegistros);$('hdResumen').innerHTML=`<div class="hd-cobrar"><strong>${hdNumero(t.cobrar)} h</strong><span>Cobrar · descuento confirmado</span></div><div class="hd-pendiente"><strong>${hdNumero(t.pendiente)} h</strong><span>Pendiente · por revisar</span></div>`;
@@ -1767,24 +1773,30 @@ async function hdExportar(){
   await hdLoadExcel();const wb=new ExcelJS.Workbook();wb.creator='Operaciones DDH';
   const red='FFFCE4E4',yellow='FFFFF2B2';
   const build=(name,headers,widths)=>{const sh=wb.addWorksheet(name,{views:[{state:'frozen',ySplit:5}]});sh.columns=widths.map(width=>({width}));sh.addRow(['REGISTRO DE HORAS A DESCUENTO']);sh.mergeCells(1,1,1,headers.length);sh.getRow(1).font={bold:true,size:16,color:{argb:'FF123C69'}};sh.addRow([hdPeriodo(f)]);sh.mergeCells(2,1,2,headers.length);sh.getRow(2).alignment={wrapText:true};sh.getRow(2).height=32;sh.addRow(['Cobrar = descuento confirmado (rojo). Pendiente = por revisar (amarillo).']);sh.mergeCells(3,1,3,headers.length);sh.getRow(3).alignment={wrapText:true};sh.getRow(3).height=30;sh.addRow([]);sh.addRow(headers);sh.getRow(5).eachCell(c=>{c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF123C69'}};c.font={bold:true,color:{argb:'FFFFFFFF'}}});return sh};
-  const addTurnosTotal=(sh,count,lastCol)=>{
-   const row=sh.addRow(['TOTAL TURNOS A DESCONTAR']);
-   sh.mergeCells(row.number,1,row.number,lastCol-1);
-   row.getCell(lastCol).value=count;
-   row.font={bold:true};
+  const addTurnosTotal=(sh,rows,lastCol)=>{
+   const title=sh.addRow(['RESUMEN DE TURNOS']);
+   sh.mergeCells(title.number,1,title.number,lastCol);
+   title.font={bold:true};
+   for(const [label,count] of hdTotalesTurnos(rows)){
+    const row=sh.addRow([label]);
+    sh.mergeCells(row.number,1,row.number,lastCol-1);
+    const cell=row.getCell(lastCol);cell.value=count;cell.numFmt='0';
+    if(label==='Total')row.font={bold:true};
+    else cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:label==='A cobro'?red:yellow}};
+   }
   };
   const summary=build('Resumen',['Equipo','Cobrar (h) — confirmado','Pendiente (h) — revisar'],[20,30,30]);
   for(const row of hdResumenEquipos(rows))summary.addRow(row);
   const total=hdTotales(rows);summary.addRow(['TOTAL',total.cobrar,total.pendiente]);summary.lastRow.font={bold:true};
   for(let i=6;i<=summary.rowCount;i++){for(const [col,color] of [[2,red],[3,yellow]]){const c=summary.getCell(i,col);c.fill={type:'pattern',pattern:'solid',fgColor:{argb:color}};c.numFmt='0.00'}}
-  addTurnosTotal(summary,hdTurnosDescuento(rows),3);
+  addTurnosTotal(summary,rows,3);
   for(const [equipo] of hdResumenEquipos(rows)){
    const sh=build(equipo,['Fecha','Equipo','Turno','Motivo','Horas','Estatus','Observación','Registrado por'],[13,14,9,36,12,16,65,33]);
    sh.getCell('A2').value=hdPeriodo({...f,equipo});
    const equipoRows=rows.filter(r=>r.equipo===equipo);
    for(const r of equipoRows){const row=sh.addRow([r.fecha,r.equipo,r.turno,hdMotivoVisible(r),Number(r.horas),r.estatus,r.observacion||'',r.cuenta_usuario||'']);row.eachCell({includeEmpty:true},c=>{c.fill={type:'pattern',pattern:'solid',fgColor:{argb:r.estatus==='Cobrar'?red:yellow}};c.alignment={vertical:'top',wrapText:true}});row.getCell(5).numFmt='0.00'}
    sh.autoFilter={from:'A5',to:{row:sh.rowCount,column:8}};
-   addTurnosTotal(sh,hdTurnosDescuento(equipoRows),5);
+   addTurnosTotal(sh,equipoRows,5);
   }
   const buffer=await wb.xlsx.writeBuffer(),url=URL.createObjectURL(new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));const a=document.createElement('a');a.href=url;a.download='HORAS_DESCUENTO_'+hdFechaActual()+'.xlsx';a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
  }catch(e){alert('No se pudo exportar: '+e.message)}finally{button.disabled=!hdRegistros.length}
@@ -1803,7 +1815,8 @@ function hdExportarPDF(){
   doc.addPage();common.didDrawPage();totalY=common.margin.top;
  }
  doc.setFontSize(10);doc.setTextColor(18,60,105);
- doc.text('TOTAL TURNOS A DESCONTAR: '+hdTurnosDescuento(rows),12,totalY);
+ const turnos=hdTotalesTurnos(rows).map(([label,count])=>label+': '+count).join('   |   ');
+ doc.text('RESUMEN DE TURNOS   |   '+turnos,12,totalY);
  doc.save('HORAS_DESCUENTO_'+hdFechaActual()+'.pdf');
 }
 
